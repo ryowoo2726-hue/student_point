@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>마석중학교 2-2 상점 확인</title>
+  <meta name="description" content="마석중학교 2학년 2반 학생 상점 및 월별 기록 간편 조회">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Minimal Top Header: School name & sync icon -->
+  <header class="top-nav">
+    <div class="nav-title">마석중 2-2</div>
+    <div class="nav-actions">
+      <button type="button" id="refreshBtn" class="icon-btn" title="구글 시트 최신 데이터 새로고침">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+        </svg>
+        <span class="sync-text" id="syncStatus">동기화됨</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Centered Interactive Viewport -->
+  <main class="center-container">
+
+    <!-- 1. Initial State: Minimal Search Input Only -->
+    <section id="searchSection" class="view-panel">
+      <form id="searchForm" class="minimal-form" onsubmit="return false;">
+        <div class="input-wrap">
+          <input 
+            type="text" 
+            id="studentInput" 
+            class="clean-input" 
+            placeholder="학번 입력 (예: 20201)" 
+            autocomplete="off" 
+            autofocus
+            inputmode="numeric"
+          >
+          <button type="submit" id="submitBtn" class="enter-btn" aria-label="조회">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </button>
+        </div>
+        <p class="input-tip">학번 5자리(예: 20201) 또는 출석번호(예: 1)를 입력하고 Enter를 누르세요</p>
+      </form>
+    </section>
+
+    <!-- 2. Result State: Student Name, Total Score & Monthly Records -->
+    <section id="resultSection" class="view-panel" style="display: none;" aria-live="polite">
+      <div class="compact-result-card">
+        <!-- Close / Back Button -->
+        <button type="button" id="backBtn" class="card-close-btn" title="다른 학번 입력 (ESC)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+
+        <!-- Top Profile & Total Score Header -->
+        <div class="result-header-row">
+          <div class="result-student">
+            <span class="student-num" id="studentNum">20201 (1번)</span>
+            <span class="student-name" id="studentName">강예림</span>
+          </div>
+
+          <div class="result-score-box">
+            <span class="score-label">총 상점</span>
+            <div class="score-value-row">
+              <span class="score-num" id="studentPoints">9</span>
+              <span class="score-unit">점</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 1인 1역 & 기본 정보 뱃지 (있을 경우) -->
+        <div class="student-meta-pills" id="studentMetaPills">
+          <span class="meta-pill" id="rolePill">1인1역: 분리수거</span>
+        </div>
+
+        <!-- Divider -->
+        <div class="card-inner-divider"></div>
+
+        <!-- Monthly Breakdown Records Section -->
+        <div class="monthly-section">
+          <div class="monthly-section-head">
+            <span class="section-badge">월별 상점 내역</span>
+            <span class="live-dot-tag" id="liveDotTag">구글시트 실시간 연동</span>
+          </div>
+
+          <div class="monthly-list" id="monthlyList">
+            <!-- Dynamically populated by JS -->
+          </div>
+        </div>
+
+      </div>
+
+      <button type="button" id="searchAgainBtn" class="text-link-btn">다른 학생 조회하기</button>
+    </section>
+
+  </main>
+
+  <!-- Simple Feedback Toast -->
+  <div id="toast" class="toast" role="status"></div>
+
+  <!-- Scripts -->
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
