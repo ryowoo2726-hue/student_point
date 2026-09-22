@@ -89,44 +89,70 @@
     studentName.textContent = student.name;
     studentPoints.textContent = student.points;
 
-    // 1인1역 pill
+    renderRolePill(student);
+
+    // 출석과 1인1역을 포함한 받은 상점 기록을 모두 표시
+    renderPointRecords(getPointRecords(student));
+
+    searchSection.style.display = 'none';
+    resultSection.style.display = 'block';
+  }
+
+  function renderRolePill(student) {
     if (student.role && student.role !== '없음' && student.role !== '역할 없음') {
       rolePill.textContent = `1인1역: ${student.role}`;
       rolePill.style.display = 'inline-block';
     } else {
       rolePill.style.display = 'none';
     }
-
-    // Render monthly records
-    renderMonthlyList(student.monthly || []);
-
-    searchSection.style.display = 'none';
-    resultSection.style.display = 'block';
   }
 
-  function renderMonthlyList(monthlyData) {
+  function getPointRecords(student) {
+    if (Array.isArray(student.records)) {
+      return student.records.filter(item => Number(item.points) > 0);
+    }
+
+    const attendanceRecords = (student.monthly || [])
+      .filter(item => Number(item.points) > 0)
+      .map(item => ({
+        label: `${item.month} 출석`,
+        points: item.points,
+        detail: item.detail || ''
+      }));
+
+    if (Number(student.rolePoints) > 0) {
+      attendanceRecords.push({
+        label: '1인1역',
+        points: student.rolePoints,
+        detail: student.role || ''
+      });
+    }
+
+    return attendanceRecords;
+  }
+
+  function renderPointRecords(records) {
     monthlyList.innerHTML = '';
 
-    if (!monthlyData || monthlyData.length === 0) {
-      monthlyList.innerHTML = '<div style="font-size:0.8rem; color:var(--text-muted); text-align:center; padding:12px;">월별 기록이 없습니다.</div>';
+    if (!records || records.length === 0) {
+      monthlyList.innerHTML = '<div style="font-size:0.8rem; color:var(--text-muted); text-align:center; padding:12px;">받은 상점 기록이 없습니다.</div>';
       return;
     }
 
-    monthlyData.forEach(item => {
+    records.forEach(item => {
       const row = document.createElement('div');
       row.className = 'monthly-row';
 
       const hasDetail = item.detail && item.detail.trim() !== '';
-      const isPositive = item.points > 0;
 
       row.innerHTML = `
         <div class="monthly-main">
           <div class="month-name-wrap">
-            <span class="month-name">${escapeHtml(item.month)} 출석</span>
+            <span class="month-name">${escapeHtml(item.label)}</span>
             ${hasDetail ? '<span class="month-toggle-icon">▼</span>' : ''}
           </div>
-          <span class="month-pts ${isPositive ? '' : 'zero'}">
-            ${isPositive ? '+' + item.points : '0'}점
+          <span class="month-pts">
+            +${item.points}점
           </span>
         </div>
         ${hasDetail ? `<div class="month-detail-panel">${escapeHtml(item.detail)}</div>` : ''}
@@ -136,7 +162,7 @@
         row.querySelector('.monthly-main').addEventListener('click', () => {
           row.classList.toggle('open');
         });
-        if (item.month === '9월' && isPositive) {
+        if (item.label === '9월 출석') {
           row.classList.add('open');
         }
       }
@@ -218,7 +244,9 @@
 
       let livePoints = student.points;
       const liveMonthly = [];
+      const liveRecords = [];
       let liveRole = student.role;
+      let liveRolePoints = student.rolePoints || 0;
 
       rows.forEach(row => {
         if (row.length < 2) return;
@@ -232,34 +260,33 @@
             if (m) livePoints = parseInt(m[1], 10);
           });
         } else if (first.includes('월 출석')) {
-          const monthName = first.split(' ')[0];
           const pts = parseInt(second.replace(/[^0-9]/g, '') || '0', 10);
-          liveMonthly.push({
-            month: monthName,
-            points: pts,
-            detail: third
-          });
+          const record = { label: first, points: pts, detail: third };
+          liveMonthly.push({ month: first.split(' ')[0], points: pts, detail: third });
+          if (pts > 0) liveRecords.push(record);
         } else if (first.includes('1인1역')) {
+          const pts = parseInt(second.replace(/[^0-9]/g, '') || '0', 10);
           if (third) liveRole = third;
+          liveRolePoints = pts;
+          if (pts > 0) {
+            liveRecords.push({ label: '1인1역', points: pts, detail: third });
+          }
         }
       });
 
-      if (liveMonthly.length > 0) {
-        student.points = livePoints;
-        student.monthly = liveMonthly;
-        student.role = liveRole;
+      student.points = livePoints;
+      student.monthly = liveMonthly;
+      student.records = liveRecords;
+      student.role = liveRole;
+      student.rolePoints = liveRolePoints;
 
-        const idx = students.findIndex(s => s.id === student.id);
-        if (idx !== -1) students[idx] = student;
+      const idx = students.findIndex(s => s.id === student.id);
+      if (idx !== -1) students[idx] = student;
 
-        if (currentStudent && currentStudent.id === student.id) {
-          studentPoints.textContent = student.points;
-          renderMonthlyList(student.monthly);
-          if (student.role && student.role !== '없음' && student.role !== '역할 없음') {
-            rolePill.textContent = `1인1역: ${student.role}`;
-            rolePill.style.display = 'inline-block';
-          }
-        }
+      if (currentStudent && currentStudent.id === student.id) {
+        studentPoints.textContent = student.points;
+        renderPointRecords(getPointRecords(student));
+        renderRolePill(student);
       }
 
       const now = new Date();
