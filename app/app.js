@@ -1,5 +1,5 @@
 /**
- * ë§ìì¤íêµ 2íë 2ë° ìì  ê°í¸ ì¡°í ìì¤í (Design 1 í´ë¦° ë§¤í¸ ë¨ì¼ íë§)
+ * \ub9c8\uc11d\uc911\ud559\uad50 2\ud559\ub144 2\ubc18 \uc0c1\uc810 \uac04\ud3b8 \uc870\ud68c \uc2dc\uc2a4\ud15c (Design 1 \ud074\ub9b0 \ub9e4\ud2b8 \ub2e8\uc77c \ud14c\ub9c8)
  */
 
 (function () {
@@ -39,10 +39,10 @@
     loadInitialData();
     bindEvents();
 
-    // 1) íì´ì§ ë¡ë ì¦ì êµ¬ê¸ ìí¸ ë©ì¸ í­(ì´ ìì ) ìµì  ë°ì´í° ìë ëê¸°í
+    // 1) \ud398\uc774\uc9c0 \ub85c\ub4dc \uc989\uc2dc \uad6c\uae00 \uc2dc\ud2b8 \uba54\uc778 \ud0ed(\ucd1d \uc0c1\uc810) \ucd5c\uc2e0 \ub370\uc774\ud130 \uc790\ub3d9 \ub3d9\uae30\ud654
     syncMainSheetLive(false);
 
-    // 2) 30ì´ë§ë¤ ë°±ê·¸ë¼ì´ë ìë ëê¸°í
+    // 2) 30\ucd08\ub9c8\ub2e4 \ubc31\uadf8\ub77c\uc6b4\ub4dc \uc790\ub3d9 \ub3d9\uae30\ud654
     setupAutoSync();
   }
 
@@ -55,7 +55,7 @@
   async function handleSearch() {
     const query = studentInput.value.trim();
     if (!query) {
-      showToast('íë²ì ìë ¥í´ì£¼ì¸ì.');
+      showToast('\ud559\ubc88\uc744 \uc785\ub825\ud574\uc8fc\uc138\uc694.');
       studentInput.focus();
       return;
     }
@@ -75,26 +75,26 @@
     }
 
     if (!matched) {
-      showToast(`'${query}' íìì ì°¾ì ì ììµëë¤.`);
+      showToast(`'${query}' \ud559\uc0dd\uc744 \ucc3e\uc744 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4.`);
       return;
     }
 
-    // 1ë¨ê³: ìºìë ë°ì´í°ë¡ ì¦ì íë©´ ë ëë§
+    // 1\ub2e8\uacc4: \uce90\uc2dc\ub41c \ub370\uc774\ud130\ub85c \uc989\uc2dc \ud654\uba74 \ub80c\ub354\ub9c1
     showResult(matched);
 
-    // 2ë¨ê³: êµ¬ê¸ ìí¸ í´ë¹ íì í­ìì ì¤ìê° ìµì  ë°ì´í° ì¦ì ê°±ì 
+    // 2\ub2e8\uacc4: \uad6c\uae00 \uc2dc\ud2b8 \ud574\ub2f9 \ud559\uc0dd \ud0ed\uc5d0\uc11c \uc2e4\uc2dc\uac04 \ucd5c\uc2e0 \ub370\uc774\ud130 \uc989\uc2dc \uac31\uc2e0
     await fetchStudentLiveSheet(matched, false);
   }
 
   function showResult(student) {
     currentStudent = student;
-    studentNum.textContent = `${student.id} (${student.number}ë²)`;
+    studentNum.textContent = `${student.id} (${student.number}\ubc88)`;
     studentName.textContent = student.name;
     studentPoints.textContent = student.points;
 
     renderRolePill(student);
 
-    // ì¶ìê³¼ 1ì¸1ì­ì í¬í¨í ë°ì ìì  ê¸°ë¡ì ëª¨ë íì
+    // \ucd9c\uc11d\uacfc 1\uc7781\uc5ed\uc744 \ud3ec\ud568\ud55c \ubc1b\uc740 \uc0c1\uc810 \uae30\ub85d\uc744 \ubaa8\ub450 \ud45c\uc2dc
     renderPointRecords(getPointRecords(student));
 
     searchSection.style.display = 'none';
@@ -102,8 +102,8 @@
   }
 
   function renderRolePill(student) {
-    if (student.role && student.role !== 'ìì' && student.role !== 'ì­í  ìì') {
-      rolePill.textContent = `1ì¸1ì­: ${student.role}`;
+    if (student.role && student.role !== '\uc5c6\uc74c' && student.role !== '\uc5ed\ud560 \uc5c6\uc74c') {
+      rolePill.textContent = `1\uc7781\uc5ed: ${student.role}`;
       rolePill.style.display = 'inline-block';
     } else {
       rolePill.style.display = 'none';
@@ -118,14 +118,14 @@
     const attendanceRecords = (student.monthly || [])
       .filter(item => Number(item.points) > 0)
       .map(item => ({
-        label: `${item.month} ì¶ì`,
+        label: `${item.month} \ucd9c\uc11d`,
         points: item.points,
         detail: item.detail || ''
       }));
 
     if (Number(student.rolePoints) > 0) {
       attendanceRecords.push({
-        label: '1ì¸1ì­',
+        label: '1\uc7781\uc5ed',
         points: student.rolePoints,
         detail: student.role || ''
       });
@@ -138,13 +138,13 @@
     monthlyList.innerHTML = '';
 
     if (!records || records.length === 0) {
-      monthlyList.innerHTML = '<div style="font-size:0.8rem; color:var(--text-muted); text-align:center; padding:12px;">ë°ì ìì  ê¸°ë¡ì´ ììµëë¤.</div>';
+      monthlyList.innerHTML = '<div style="font-size:0.8rem; color:var(--text-muted); text-align:center; padding:12px;">\ubc1b\uc740 \uc0c1\uc810 \uae30\ub85d\uc774 \uc5c6\uc2b5\ub2c8\ub2e4.</div>';
       return;
     }
 
     records.forEach(item => {
       const row = document.createElement('div');
-      const isRoleRecord = /^1ì¸\s*1ì­/.test(item.label);
+      const isRoleRecord = /^1\uc778\s*1\uc5ed/.test(item.label);
       row.className = `monthly-row${isRoleRecord ? ' role-point-row' : ''}`;
 
       const hasDetail = item.detail && item.detail.trim() !== '';
@@ -153,11 +153,11 @@
         <div class="monthly-main">
           <div class="month-name-wrap">
             <span class="month-name">${escapeHtml(item.label)}</span>
-            ${isRoleRecord ? '<span class="role-record-tag">1ì¸ 1ì­</span>' : ''}
-            ${hasDetail ? '<span class="month-toggle-icon">â¼</span>' : ''}
+            ${isRoleRecord ? '<span class="role-record-tag">1\uc778 1\uc5ed</span>' : ''}
+            ${hasDetail ? '<span class="month-toggle-icon">\u25bc</span>' : ''}
           </div>
           <span class="month-pts">
-            +${item.points}ì 
+            +${item.points}\uc810
           </span>
         </div>
         ${hasDetail ? `<div class="month-detail-panel">${escapeHtml(item.detail)}</div>` : ''}
@@ -167,7 +167,7 @@
         row.querySelector('.monthly-main').addEventListener('click', () => {
           row.classList.toggle('open');
         });
-        if (item.label === '9ì ì¶ì') {
+        if (item.label === '9\uc6d4 \ucd9c\uc11d') {
           row.classList.add('open');
         }
       }
@@ -198,7 +198,7 @@
 
   // --- Live Google Sheet Sync ---
 
-  // ë©ì¸ 'ì´ ìì ' í­ ëê¸°í
+  // \uba54\uc778 '\ucd1d \uc0c1\uc810' \ud0ed \ub3d9\uae30\ud654
   async function syncMainSheetLive(notify = false) {
     if (typeof GOOGLE_SHEET_CONFIG === 'undefined') return;
 
@@ -228,7 +228,7 @@
 
       const now = new Date();
       const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
-      syncStatus.textContent = `ëê¸°íë¨ ${timeStr}`;
+      syncStatus.textContent = `\ub3d9\uae30\ud654\ub428 ${timeStr}`;
 
       if (currentStudent) {
         const fresh = students.find(s => s.id === currentStudent.id);
@@ -238,14 +238,14 @@
       }
 
       if (notify) {
-        showToast(`êµ¬ê¸ ìí¸ ìµì  ë°ì´í° ë°ì ìë£ (${timeStr})`);
+        showToast(`\uad6c\uae00 \uc2dc\ud2b8 \ucd5c\uc2e0 \ub370\uc774\ud130 \ubc18\uc601 \uc644\ub8cc (${timeStr})`);
       }
     } catch (err) {
       console.warn('Main sheet live fetch error:', err);
     }
   }
 
-  // ê°ë³ íì ìí¸ í­ ëê¸°í
+  // \uac1c\ubcc4 \ud559\uc0dd \uc2dc\ud2b8 \ud0ed \ub3d9\uae30\ud654
   async function fetchStudentLiveSheet(student, notify = false) {
     if (!student.gid || typeof GOOGLE_SHEET_CONFIG === 'undefined') return;
 
@@ -271,22 +271,22 @@
         const second = (row[1] || '').trim();
         const third = (row[2] || '').trim();
 
-        if (first.includes('ì´ ìì ') || second.includes('ì´ ìì ') || row.some(c => c.includes('ì´ ìì '))) {
+        if (first.includes('\ucd1d \uc0c1\uc810') || second.includes('\ucd1d \uc0c1\uc810') || row.some(c => c.includes('\ucd1d \uc0c1\uc810'))) {
           row.forEach(c => {
-            const m = c.match(/(\d+)ì /);
+            const m = c.match(/(\d+)\uc810/);
             if (m) livePoints = parseInt(m[1], 10);
           });
-        } else if (first.includes('ì ì¶ì')) {
+        } else if (first.includes('\uc6d4 \ucd9c\uc11d')) {
           const pts = parseInt(second.replace(/[^0-9]/g, '') || '0', 10);
           const record = { label: first, points: pts, detail: third };
           liveMonthly.push({ month: first.split(' ')[0], points: pts, detail: third });
           if (pts > 0) liveRecords.push(record);
-        } else if (first.includes('1ì¸1ì­')) {
+        } else if (first.includes('1\uc7781\uc5ed')) {
           const pts = parseInt(second.replace(/[^0-9]/g, '') || '0', 10);
           if (third) liveRole = third;
           liveRolePoints = pts;
           if (pts > 0) {
-            liveRecords.push({ label: '1ì¸1ì­', points: pts, detail: third });
+            liveRecords.push({ label: '1\uc7781\uc5ed', points: pts, detail: third });
           }
         }
       });
@@ -308,17 +308,17 @@
 
       const now = new Date();
       const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
-      syncStatus.textContent = `ëê¸°íë¨ ${timeStr}`;
+      syncStatus.textContent = `\ub3d9\uae30\ud654\ub428 ${timeStr}`;
 
       if (notify) {
-        showToast(`${student.name} íìì ìµì  ìì ì´ ë°ìëììµëë¤.`);
+        showToast(`${student.name} \ud559\uc0dd\uc758 \ucd5c\uc2e0 \uc0c1\uc810\uc774 \ubc18\uc601\ub418\uc5c8\uc2b5\ub2c8\ub2e4.`);
       }
     } catch (e) {
       console.warn('Live fetch for student sheet failed:', e);
     }
   }
 
-  // íì¤ CSV íì
+  // \ud45c\uc900 CSV \ud30c\uc11c
   function parseStandardCsv(text) {
     const lines = text.split(/\r?\n/).filter(l => l.trim() !== '');
     const result = [];
@@ -345,7 +345,7 @@
     return result;
   }
 
-  // ìë ëê¸°í ì¤ì 
+  // \uc790\ub3d9 \ub3d9\uae30\ud654 \uc124\uc815
   function setupAutoSync() {
     if (autoSyncTimer) clearInterval(autoSyncTimer);
     autoSyncTimer = setInterval(() => {
@@ -372,10 +372,10 @@
     });
   }
 
-  // ìë¡ê³ ì¹¨ ë²í¼
+  // \uc0c8\ub85c\uace0\uce68 \ubc84\ud2bc
   async function refreshAll() {
     refreshBtn.classList.add('spinning');
-    syncStatus.textContent = 'ëê¸°í ì¤';
+    syncStatus.textContent = '\ub3d9\uae30\ud654 \uc911';
 
     await syncMainSheetLive(false);
     if (currentStudent) {
@@ -383,7 +383,7 @@
     }
 
     refreshBtn.classList.remove('spinning');
-    showToast('êµ¬ê¸ ìí¸ ìµì  ë°ì´í°ë¡ ìë¡ê³ ì¹¨ëììµëë¤.');
+    showToast('\uad6c\uae00 \uc2dc\ud2b8 \ucd5c\uc2e0 \ub370\uc774\ud130\ub85c \uc0c8\ub85c\uace0\uce68\ub418\uc5c8\uc2b5\ub2c8\ub2e4.');
   }
 
   // Utilities
