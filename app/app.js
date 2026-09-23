@@ -1,5 +1,5 @@
 /**
- * 마석중학교 2학년 2반 상점 간편 조회 시스템 (Design 1 클린 매트 단일 테마)
+ * ë§ìì¤íêµ 2íë 2ë° ìì  ê°í¸ ì¡°í ìì¤í (Design 1 í´ë¦° ë§¤í¸ ë¨ì¼ íë§)
  */
 
 (function () {
@@ -30,16 +30,19 @@
   const refreshBtn = document.getElementById('refreshBtn');
   const syncStatus = document.getElementById('syncStatus');
   const toast = document.getElementById('toast');
+  const roleCriteriaBtn = document.getElementById('roleCriteriaBtn');
+  const roleCriteriaModal = document.getElementById('roleCriteriaModal');
+  const roleCriteriaCloseBtn = document.getElementById('roleCriteriaCloseBtn');
 
   // --- Init ---
   function init() {
     loadInitialData();
     bindEvents();
 
-    // 1) 페이지 로드 즉시 구글 시트 메인 탭(총 상점) 최신 데이터 자동 동기화
+    // 1) íì´ì§ ë¡ë ì¦ì êµ¬ê¸ ìí¸ ë©ì¸ í­(ì´ ìì ) ìµì  ë°ì´í° ìë ëê¸°í
     syncMainSheetLive(false);
 
-    // 2) 30초마다 백그라운드 자동 동기화
+    // 2) 30ì´ë§ë¤ ë°±ê·¸ë¼ì´ë ìë ëê¸°í
     setupAutoSync();
   }
 
@@ -52,7 +55,7 @@
   async function handleSearch() {
     const query = studentInput.value.trim();
     if (!query) {
-      showToast('학번을 입력해주세요.');
+      showToast('íë²ì ìë ¥í´ì£¼ì¸ì.');
       studentInput.focus();
       return;
     }
@@ -72,26 +75,26 @@
     }
 
     if (!matched) {
-      showToast(`'${query}' 학생을 찾을 수 없습니다.`);
+      showToast(`'${query}' íìì ì°¾ì ì ììµëë¤.`);
       return;
     }
 
-    // 1단계: 캐시된 데이터로 즉시 화면 렌더링
+    // 1ë¨ê³: ìºìë ë°ì´í°ë¡ ì¦ì íë©´ ë ëë§
     showResult(matched);
 
-    // 2단계: 구글 시트 해당 학생 탭에서 실시간 최신 데이터 즉시 갱신
+    // 2ë¨ê³: êµ¬ê¸ ìí¸ í´ë¹ íì í­ìì ì¤ìê° ìµì  ë°ì´í° ì¦ì ê°±ì 
     await fetchStudentLiveSheet(matched, false);
   }
 
   function showResult(student) {
     currentStudent = student;
-    studentNum.textContent = `${student.id} (${student.number}번)`;
+    studentNum.textContent = `${student.id} (${student.number}ë²)`;
     studentName.textContent = student.name;
     studentPoints.textContent = student.points;
 
     renderRolePill(student);
 
-    // 출석과 1인1역을 포함한 받은 상점 기록을 모두 표시
+    // ì¶ìê³¼ 1ì¸1ì­ì í¬í¨í ë°ì ìì  ê¸°ë¡ì ëª¨ë íì
     renderPointRecords(getPointRecords(student));
 
     searchSection.style.display = 'none';
@@ -99,8 +102,8 @@
   }
 
   function renderRolePill(student) {
-    if (student.role && student.role !== '없음' && student.role !== '역할 없음') {
-      rolePill.textContent = `1인1역: ${student.role}`;
+    if (student.role && student.role !== 'ìì' && student.role !== 'ì­í  ìì') {
+      rolePill.textContent = `1ì¸1ì­: ${student.role}`;
       rolePill.style.display = 'inline-block';
     } else {
       rolePill.style.display = 'none';
@@ -115,14 +118,14 @@
     const attendanceRecords = (student.monthly || [])
       .filter(item => Number(item.points) > 0)
       .map(item => ({
-        label: `${item.month} 출석`,
+        label: `${item.month} ì¶ì`,
         points: item.points,
         detail: item.detail || ''
       }));
 
     if (Number(student.rolePoints) > 0) {
       attendanceRecords.push({
-        label: '1인1역',
+        label: '1ì¸1ì­',
         points: student.rolePoints,
         detail: student.role || ''
       });
@@ -135,13 +138,14 @@
     monthlyList.innerHTML = '';
 
     if (!records || records.length === 0) {
-      monthlyList.innerHTML = '<div style="font-size:0.8rem; color:var(--text-muted); text-align:center; padding:12px;">받은 상점 기록이 없습니다.</div>';
+      monthlyList.innerHTML = '<div style="font-size:0.8rem; color:var(--text-muted); text-align:center; padding:12px;">ë°ì ìì  ê¸°ë¡ì´ ììµëë¤.</div>';
       return;
     }
 
     records.forEach(item => {
       const row = document.createElement('div');
-      row.className = 'monthly-row';
+      const isRoleRecord = /^1ì¸\s*1ì­/.test(item.label);
+      row.className = `monthly-row${isRoleRecord ? ' role-point-row' : ''}`;
 
       const hasDetail = item.detail && item.detail.trim() !== '';
 
@@ -149,10 +153,11 @@
         <div class="monthly-main">
           <div class="month-name-wrap">
             <span class="month-name">${escapeHtml(item.label)}</span>
-            ${hasDetail ? '<span class="month-toggle-icon">▼</span>' : ''}
+            ${isRoleRecord ? '<span class="role-record-tag">1ì¸ 1ì­</span>' : ''}
+            ${hasDetail ? '<span class="month-toggle-icon">â¼</span>' : ''}
           </div>
           <span class="month-pts">
-            +${item.points}점
+            +${item.points}ì 
           </span>
         </div>
         ${hasDetail ? `<div class="month-detail-panel">${escapeHtml(item.detail)}</div>` : ''}
@@ -162,7 +167,7 @@
         row.querySelector('.monthly-main').addEventListener('click', () => {
           row.classList.toggle('open');
         });
-        if (item.label === '9월 출석') {
+        if (item.label === '9ì ì¶ì') {
           row.classList.add('open');
         }
       }
@@ -179,9 +184,21 @@
     studentInput.focus();
   }
 
+  function openRoleCriteriaModal() {
+    roleCriteriaModal.hidden = false;
+    document.body.classList.add('modal-open');
+    roleCriteriaCloseBtn.focus();
+  }
+
+  function closeRoleCriteriaModal() {
+    roleCriteriaModal.hidden = true;
+    document.body.classList.remove('modal-open');
+    roleCriteriaBtn.focus();
+  }
+
   // --- Live Google Sheet Sync ---
 
-  // 메인 '총 상점' 탭 동기화
+  // ë©ì¸ 'ì´ ìì ' í­ ëê¸°í
   async function syncMainSheetLive(notify = false) {
     if (typeof GOOGLE_SHEET_CONFIG === 'undefined') return;
 
@@ -211,7 +228,7 @@
 
       const now = new Date();
       const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
-      syncStatus.textContent = `동기화됨 ${timeStr}`;
+      syncStatus.textContent = `ëê¸°íë¨ ${timeStr}`;
 
       if (currentStudent) {
         const fresh = students.find(s => s.id === currentStudent.id);
@@ -221,14 +238,14 @@
       }
 
       if (notify) {
-        showToast(`구글 시트 최신 데이터 반영 완료 (${timeStr})`);
+        showToast(`êµ¬ê¸ ìí¸ ìµì  ë°ì´í° ë°ì ìë£ (${timeStr})`);
       }
     } catch (err) {
       console.warn('Main sheet live fetch error:', err);
     }
   }
 
-  // 개별 학생 시트 탭 동기화
+  // ê°ë³ íì ìí¸ í­ ëê¸°í
   async function fetchStudentLiveSheet(student, notify = false) {
     if (!student.gid || typeof GOOGLE_SHEET_CONFIG === 'undefined') return;
 
@@ -254,22 +271,22 @@
         const second = (row[1] || '').trim();
         const third = (row[2] || '').trim();
 
-        if (first.includes('총 상점') || second.includes('총 상점') || row.some(c => c.includes('총 상점'))) {
+        if (first.includes('ì´ ìì ') || second.includes('ì´ ìì ') || row.some(c => c.includes('ì´ ìì '))) {
           row.forEach(c => {
-            const m = c.match(/(\d+)점/);
+            const m = c.match(/(\d+)ì /);
             if (m) livePoints = parseInt(m[1], 10);
           });
-        } else if (first.includes('월 출석')) {
+        } else if (first.includes('ì ì¶ì')) {
           const pts = parseInt(second.replace(/[^0-9]/g, '') || '0', 10);
           const record = { label: first, points: pts, detail: third };
           liveMonthly.push({ month: first.split(' ')[0], points: pts, detail: third });
           if (pts > 0) liveRecords.push(record);
-        } else if (first.includes('1인1역')) {
+        } else if (first.includes('1ì¸1ì­')) {
           const pts = parseInt(second.replace(/[^0-9]/g, '') || '0', 10);
           if (third) liveRole = third;
           liveRolePoints = pts;
           if (pts > 0) {
-            liveRecords.push({ label: '1인1역', points: pts, detail: third });
+            liveRecords.push({ label: '1ì¸1ì­', points: pts, detail: third });
           }
         }
       });
@@ -291,17 +308,17 @@
 
       const now = new Date();
       const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
-      syncStatus.textContent = `동기화됨 ${timeStr}`;
+      syncStatus.textContent = `ëê¸°íë¨ ${timeStr}`;
 
       if (notify) {
-        showToast(`${student.name} 학생의 최신 상점이 반영되었습니다.`);
+        showToast(`${student.name} íìì ìµì  ìì ì´ ë°ìëììµëë¤.`);
       }
     } catch (e) {
       console.warn('Live fetch for student sheet failed:', e);
     }
   }
 
-  // 표준 CSV 파서
+  // íì¤ CSV íì
   function parseStandardCsv(text) {
     const lines = text.split(/\r?\n/).filter(l => l.trim() !== '');
     const result = [];
@@ -328,7 +345,7 @@
     return result;
   }
 
-  // 자동 동기화 설정
+  // ìë ëê¸°í ì¤ì 
   function setupAutoSync() {
     if (autoSyncTimer) clearInterval(autoSyncTimer);
     autoSyncTimer = setInterval(() => {
@@ -355,10 +372,10 @@
     });
   }
 
-  // 새로고침 버튼
+  // ìë¡ê³ ì¹¨ ë²í¼
   async function refreshAll() {
     refreshBtn.classList.add('spinning');
-    syncStatus.textContent = '동기화 중';
+    syncStatus.textContent = 'ëê¸°í ì¤';
 
     await syncMainSheetLive(false);
     if (currentStudent) {
@@ -366,7 +383,7 @@
     }
 
     refreshBtn.classList.remove('spinning');
-    showToast('구글 시트 최신 데이터로 새로고침되었습니다.');
+    showToast('êµ¬ê¸ ìí¸ ìµì  ë°ì´í°ë¡ ìë¡ê³ ì¹¨ëììµëë¤.');
   }
 
   // Utilities
@@ -398,9 +415,18 @@
 
     backBtn.addEventListener('click', showSearch);
     searchAgainBtn.addEventListener('click', showSearch);
+    roleCriteriaBtn.addEventListener('click', openRoleCriteriaModal);
+    roleCriteriaCloseBtn.addEventListener('click', closeRoleCriteriaModal);
+    roleCriteriaModal.addEventListener('click', (e) => {
+      if (e.target === roleCriteriaModal) closeRoleCriteriaModal();
+    });
 
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
+        if (!roleCriteriaModal.hidden) {
+          closeRoleCriteriaModal();
+          return;
+        }
         if (resultSection.style.display !== 'none') {
           showSearch();
         }
