@@ -13,6 +13,9 @@
   <header class="top-nav">
     <div class="nav-title">마석중 2-2</div>
     <div class="nav-actions">
+      <button type="button" id="roleCriteriaBtn" class="icon-btn" title="1인 1역 상점 기준 보기">
+        <span>상점 기준</span>
+      </button>
       <button type="button" id="refreshBtn" class="icon-btn" title="구글 시트 최신 데이터 새로고침">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
@@ -105,6 +108,17 @@
 
   <!-- Simple Feedback Toast -->
   <div id="toast" class="toast" role="status"></div>
+
+  <!-- 1인 1역 상점 기준 안내 -->
+  <div id="roleCriteriaModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="roleCriteriaTitle" hidden>
+    <div class="criteria-modal">
+      <button type="button" id="roleCriteriaCloseBtn" class="modal-close-btn" aria-label="상점 기준 안내 닫기">×</button>
+      <p class="modal-eyebrow">1인 1역</p>
+      <h2 id="roleCriteriaTitle">상점 기준</h2>
+      <p>배정된 1인 1역을 책임감 있게 수행한 경우, 확인 후 상점으로 반영됩니다.</p>
+      <p class="modal-note">상점 내역에서 <strong>1인 1역</strong> 표시가 붙은 항목으로 확인할 수 있습니다.</p>
+    </div>
+  </div>
 
   <!-- Scripts -->
   <script src="data.js"></script>
