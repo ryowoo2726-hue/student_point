@@ -9,6 +9,10 @@
   let students = [];
   let currentStudent = null;
   let autoSyncTimer = null;
+  const ROLE_SHEET_GIDS = {
+    '\ud578\ub4dc\ud3f0 \ub2f4\ub2f9': '1616173869', '\ucd9c\uc11d\ubd80 \ub2f4\ub2f9': '1791574817',
+    '\ubd84\ub9ac\uc218\uac70': '408675367', '\ud14c\ube14\ub9bf \uad00\ub9ac': '2066046088', '\ud2b9\ubcc4\uc2e4 \uccad\uc18c': '1613811606'
+  };
 
   // --- Elements ---
   const searchSection = document.getElementById('searchSection');
@@ -127,11 +131,18 @@
       attendanceRecords.push({
         label: '1\uc7781\uc5ed',
         points: student.rolePoints,
-        detail: student.role || ''
+        detail: buildRoleDetail(student)
       });
     }
 
     return attendanceRecords;
+  }
+
+  function buildRoleDetail(student) {
+    const dates = student.roleDates || [];
+    const roleName = student.role || '1\uc7781\uc5ed';
+    const dateText = dates.length ? dates.join(', ') : '\uc218\ud589 \ub0a0\uc9dc \ud655\uc778 \uc911';
+    return `${roleName}\n\uc218\ud589 ${dates.length}\ud68c\n\uc218\ud589 \ub0a0\uc9dc: ${dateText}\n\ubc18\uc601 \uc0c1\uc810: ${student.rolePoints || 0}\uc810`;
   }
 
   function renderPointRecords(records) {
@@ -296,6 +307,11 @@
       student.records = liveRecords;
       student.role = liveRole;
       student.rolePoints = liveRolePoints;
+      await fetchRoleDetail(student);
+      if (liveRolePoints > 0) {
+        const roleRecord = liveRecords.find(record => record.label === '1\uc7781\uc5ed');
+        if (roleRecord) roleRecord.detail = buildRoleDetail(student);
+      }
 
       const idx = students.findIndex(s => s.id === student.id);
       if (idx !== -1) students[idx] = student;
@@ -315,6 +331,24 @@
       }
     } catch (e) {
       console.warn('Live fetch for student sheet failed:', e);
+    }
+  }
+
+  async function fetchRoleDetail(student) {
+    const roleName = Object.keys(ROLE_SHEET_GIDS).find(name => (student.role || '').startsWith(name));
+    if (!roleName || typeof GOOGLE_SHEET_CONFIG === 'undefined') return;
+    try {
+      const url = `${GOOGLE_SHEET_CONFIG.baseUrl}&gid=${ROLE_SHEET_GIDS[roleName]}&_t=${Date.now()}`;
+      const rows = parseStandardCsv(await (await fetch(url, { cache: 'no-store' })).text());
+      const header = rows[0] || [];
+      const col = header.findIndex(cell => cell.trim() === student.name);
+      if (col < 1) return;
+      student.roleDates = rows.slice(1)
+        .filter(row => String(row[col] || '').trim().toUpperCase() === 'TRUE')
+        .map(row => String(row[0] || '').trim())
+        .filter(Boolean);
+    } catch (err) {
+      console.warn('Role detail fetch error:', err);
     }
   }
 
