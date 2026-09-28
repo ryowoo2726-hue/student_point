@@ -13,6 +13,10 @@
   <header class="top-nav">
     <div class="nav-title">마석중 2-2</div>
     <div class="nav-actions">
+      <a href="admin.html" class="icon-btn page-link">관리자</a>
+      <button type="button" id="roleCriteriaBtn" class="icon-btn" title="1인 1역 상점 기준 보기">
+        <span>상점 기준</span>
+      </button>
       <button type="button" id="refreshBtn" class="icon-btn" title="구글 시트 최신 데이터 새로고침">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
@@ -105,6 +109,23 @@
 
   <!-- Simple Feedback Toast -->
   <div id="toast" class="toast" role="status"></div>
+
+  <!-- 1인 1역 상점 기준 안내 -->
+  <div id="roleCriteriaModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="roleCriteriaTitle" hidden>
+    <div class="criteria-modal">
+      <button type="button" id="roleCriteriaCloseBtn" class="modal-close-btn" aria-label="상점 기준 안내 닫기">×</button>
+      <p class="modal-eyebrow">1인 1역</p>
+      <h2 id="roleCriteriaTitle">상점 기준</h2>
+      <ul class="criteria-list">
+        <li><strong>특별실 청소</strong>: 수행 1회당 1점</li>
+        <li><strong>테블릿 관리</strong>: 누적 5회마다 3점</li>
+        <li><strong>분리수거</strong>: 수행 1회당 3점</li>
+        <li><strong>핸드폰 담당</strong>: 누적 5회마다 3점</li>
+        <li><strong>출석부 담당</strong>: 누적 5회마다 1점</li>
+      </ul>
+      <p class="modal-note">학생별 상점 내역에서 역할·수행 날짜·횟수·반영 점수를 확인할 수 있습니다.</p>
+    </div>
+  </div>
 
   <!-- Scripts -->
   <script src="data.js"></script>

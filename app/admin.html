@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>마석중학교 2-2 상점 관리</title>
+  <meta name="description" content="기준 날짜별 학생 총 상점과 순위 조회">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="admin-page">
+  <header class="top-nav">
+    <div class="nav-title">마석중 2-2 <span class="meta-pill">관리자</span></div>
+    <div class="nav-actions">
+      <a href="index.html" class="icon-btn page-link">학생 조회</a>
+      <button type="button" id="adminLogoutBtn" class="icon-btn" hidden>로그아웃</button>
+      <button type="button" id="adminRefreshBtn" class="icon-btn" hidden>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+        새로고침
+      </button>
+    </div>
+  </header>
+  <main id="adminLogin" class="admin-login-container">
+    <section class="compact-result-card" aria-labelledby="adminLoginTitle">
+      <span class="student-num">마석중 2-2</span>
+      <h1 id="adminLoginTitle" class="student-name">관리자 로그인</h1>
+      <p class="admin-help">관리자 비밀번호를 입력해주세요.</p>
+      <form id="adminLoginForm" class="admin-date-form">
+        <label for="adminPassword">비밀번호</label>
+        <div class="input-wrap">
+          <input type="password" id="adminPassword" class="clean-input" inputmode="numeric" autocomplete="current-password" placeholder="비밀번호 입력" required autofocus aria-describedby="adminLoginError">
+          <button type="submit" class="admin-primary-btn">로그인</button>
+        </div>
+        <p id="adminLoginError" class="admin-login-error" role="alert" hidden></p>
+      </form>
+    </section>
+  </main>
+  <main id="adminDashboard" class="admin-container" hidden>
+    <section class="compact-result-card admin-overview" aria-labelledby="adminTitle">
+      <div class="result-header-row">
+        <div class="result-student">
+          <span class="student-num">우리 반 상점 현황</span>
+          <h1 id="adminTitle" class="student-name">날짜별 상점 관리</h1>
+        </div>
+        <span class="meta-pill">2학년 2반</span>
+      </div>
+      <form id="dateForm" class="admin-date-form">
+        <label for="cutoffDate">기준 날짜</label>
+        <div class="admin-date-controls">
+          <input type="date" id="cutoffDate" required aria-describedby="dateHelp">
+          <button type="submit" class="admin-primary-btn">조회</button>
+          <button type="button" id="todayBtn" class="icon-btn">오늘</button>
+        </div>
+        <p id="dateHelp" class="admin-help">선택한 날짜까지 받은 상점을 합산합니다. 해당 날짜의 기록도 포함됩니다.</p>
+      </form>
+      <div class="card-inner-divider"></div>
+      <div class="admin-summary" aria-live="polite">
+        <div><span class="score-label">학급 총 상점</span><div class="score-value-row"><strong id="classPoints" class="score-num">—</strong><span class="score-unit">점</span></div></div>
+        <div><span class="score-label">학생 수</span><div class="score-value-row"><strong id="studentCount" class="score-num">—</strong><span class="score-unit">명</span></div></div>
+        <div><span class="score-label">평균 상점</span><div class="score-value-row"><strong id="averagePoints" class="score-num">—</strong><span class="score-unit">점</span></div></div>
+      </div>
+      <p id="adminSyncStatus" class="admin-status" role="status">저장된 기록을 불러오는 중입니다.</p>
+    </section>
+    <section class="compact-result-card admin-ranking" aria-labelledby="rankingTitle">
+      <div class="monthly-section-head">
+        <h2 id="rankingTitle" class="section-badge">학생별 총 상점 순위</h2>
+        <span id="rankingDate" class="meta-pill"></span>
+      </div>
+      <p class="admin-help">총 상점이 높은 순으로 표시하며, 동점은 공동 순위입니다.</p>
+      <p id="rankingWarning" class="admin-warning" role="status" hidden></p>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <caption class="sr-only">기준 날짜까지의 학생별 상점 순위 및 출석, 1인 1역, 추가 상점</caption>
+          <thead><tr><th scope="col">순위</th><th scope="col">학생</th><th scope="col">출석</th><th scope="col">1인 1역</th><th scope="col">추가</th><th scope="col">총 상점</th></tr></thead>
+          <tbody id="rankingBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+  <script src="data.js"></script>
+  <script src="admin-data.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>

@@ -9,6 +9,10 @@
   let students = [];
   let currentStudent = null;
   let autoSyncTimer = null;
+  const ROLE_SHEET_GIDS = {
+    '핸드폰 담당': '1616173869', '출석부 담당': '1791574817',
+    '분리수거': '408675367', '테블릿 관리': '2066046088', '특별실 청소': '1613811606'
+  };
 
   // --- Elements ---
   const searchSection = document.getElementById('searchSection');
@@ -30,6 +34,9 @@
   const refreshBtn = document.getElementById('refreshBtn');
   const syncStatus = document.getElementById('syncStatus');
   const toast = document.getElementById('toast');
+  const roleCriteriaBtn = document.getElementById('roleCriteriaBtn');
+  const roleCriteriaModal = document.getElementById('roleCriteriaModal');
+  const roleCriteriaCloseBtn = document.getElementById('roleCriteriaCloseBtn');
 
   // --- Init ---
   function init() {
@@ -124,11 +131,18 @@
       attendanceRecords.push({
         label: '1인1역',
         points: student.rolePoints,
-        detail: student.role || ''
+        detail: buildRoleDetail(student)
       });
     }
 
     return attendanceRecords;
+  }
+
+  function buildRoleDetail(student) {
+    const dates = student.roleDates || [];
+    const roleName = student.role || '1인1역';
+    const dateText = dates.length ? dates.join(', ') : '수행 날짜 확인 중';
+    return `${roleName}\n수행 ${dates.length}회\n수행 날짜: ${dateText}\n반영 상점: ${student.rolePoints || 0}점`;
   }
 
   function renderPointRecords(records) {
@@ -141,7 +155,8 @@
 
     records.forEach(item => {
       const row = document.createElement('div');
-      row.className = 'monthly-row';
+      const isRoleRecord = /^1인\s*1역/.test(item.label);
+      row.className = `monthly-row${isRoleRecord ? ' role-point-row' : ''}`;
 
       const hasDetail = item.detail && item.detail.trim() !== '';
 
@@ -149,6 +164,7 @@
         <div class="monthly-main">
           <div class="month-name-wrap">
             <span class="month-name">${escapeHtml(item.label)}</span>
+            ${isRoleRecord ? '<span class="role-record-tag">1인 1역</span>' : ''}
             ${hasDetail ? '<span class="month-toggle-icon">▼</span>' : ''}
           </div>
           <span class="month-pts">
@@ -177,6 +193,18 @@
     searchSection.style.display = 'block';
     studentInput.value = '';
     studentInput.focus();
+  }
+
+  function openRoleCriteriaModal() {
+    roleCriteriaModal.hidden = false;
+    document.body.classList.add('modal-open');
+    roleCriteriaCloseBtn.focus();
+  }
+
+  function closeRoleCriteriaModal() {
+    roleCriteriaModal.hidden = true;
+    document.body.classList.remove('modal-open');
+    roleCriteriaBtn.focus();
   }
 
   // --- Live Google Sheet Sync ---
@@ -279,6 +307,11 @@
       student.records = liveRecords;
       student.role = liveRole;
       student.rolePoints = liveRolePoints;
+      await fetchRoleDetail(student);
+      if (liveRolePoints > 0) {
+        const roleRecord = liveRecords.find(record => record.label === '1인1역');
+        if (roleRecord) roleRecord.detail = buildRoleDetail(student);
+      }
 
       const idx = students.findIndex(s => s.id === student.id);
       if (idx !== -1) students[idx] = student;
@@ -298,6 +331,24 @@
       }
     } catch (e) {
       console.warn('Live fetch for student sheet failed:', e);
+    }
+  }
+
+  async function fetchRoleDetail(student) {
+    const roleName = Object.keys(ROLE_SHEET_GIDS).find(name => (student.role || '').startsWith(name));
+    if (!roleName || typeof GOOGLE_SHEET_CONFIG === 'undefined') return;
+    try {
+      const url = `${GOOGLE_SHEET_CONFIG.baseUrl}&gid=${ROLE_SHEET_GIDS[roleName]}&_t=${Date.now()}`;
+      const rows = parseStandardCsv(await (await fetch(url, { cache: 'no-store' })).text());
+      const header = rows[0] || [];
+      const col = header.findIndex(cell => cell.trim() === student.name);
+      if (col < 1) return;
+      student.roleDates = rows.slice(1)
+        .filter(row => String(row[col] || '').trim().toUpperCase() === 'TRUE')
+        .map(row => String(row[0] || '').trim())
+        .filter(Boolean);
+    } catch (err) {
+      console.warn('Role detail fetch error:', err);
     }
   }
 
@@ -398,9 +449,18 @@
 
     backBtn.addEventListener('click', showSearch);
     searchAgainBtn.addEventListener('click', showSearch);
+    roleCriteriaBtn.addEventListener('click', openRoleCriteriaModal);
+    roleCriteriaCloseBtn.addEventListener('click', closeRoleCriteriaModal);
+    roleCriteriaModal.addEventListener('click', (e) => {
+      if (e.target === roleCriteriaModal) closeRoleCriteriaModal();
+    });
 
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
+        if (!roleCriteriaModal.hidden) {
+          closeRoleCriteriaModal();
+          return;
+        }
         if (resultSection.style.display !== 'none') {
           showSearch();
         }
