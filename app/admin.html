@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>마석중학교 2-2 상점 관리</title>
-  <meta name="description" content="기준 날짜별 학생 총 상점과 순위 조회">
+  <meta name="description" content="선택한 시작일부터 오늘까지 학생 상점과 순위 조회">
   <link rel="stylesheet" href="style.css">
 </head>
 <body class="admin-page">
@@ -44,14 +44,19 @@
         <span class="meta-pill">2학년 2반</span>
       </div>
       <form id="dateForm" class="admin-date-form">
-        <label for="cutoffDate">기준 날짜</label>
+        <label for="cutoffDate">조회 시작일</label>
         <div class="admin-date-controls">
           <input type="date" id="cutoffDate" required aria-describedby="dateHelp">
           <button type="submit" class="admin-primary-btn">조회</button>
           <button type="button" id="todayBtn" class="icon-btn">오늘</button>
         </div>
-        <p id="dateHelp" class="admin-help">선택한 날짜까지 받은 상점을 합산합니다. 해당 날짜의 기록도 포함됩니다.</p>
+        <p id="dateHelp" class="admin-help">선택한 시작일부터 접속한 오늘까지 받은 상점을 합산합니다. 시작일과 오늘의 기록을 모두 포함합니다.</p>
       </form>
+      <div class="admin-shared-settings">
+        <p id="sharedSettingsStatus" class="admin-help" role="status">학생 공통 조회 시작일을 불러오는 중입니다.</p>
+        <a id="sharedSettingsLink" class="icon-btn page-link" target="_blank" rel="noopener">학생 시작일 설정</a>
+        <p class="admin-help">구글 시트의 ‘조회 설정’ B2 날짜를 변경하면 모든 학생에게 적용됩니다. 위 조회 시작일은 관리자 집계용입니다.</p>
+      </div>
       <div class="card-inner-divider"></div>
       <div class="admin-summary" aria-live="polite">
         <div><span class="score-label">학급 총 상점</span><div class="score-value-row"><strong id="classPoints" class="score-num">—</strong><span class="score-unit">점</span></div></div>
@@ -69,7 +74,7 @@
       <p id="rankingWarning" class="admin-warning" role="status" hidden></p>
       <div class="admin-table-wrap">
         <table class="admin-table">
-          <caption class="sr-only">기준 날짜까지의 학생별 상점 순위 및 출석, 1인 1역, 추가 상점</caption>
+          <caption class="sr-only">선택한 시작일부터 오늘까지의 학생별 상점 순위 및 출석, 1인 1역, 추가 상점</caption>
           <thead><tr><th scope="col">순위</th><th scope="col">학생</th><th scope="col">출석</th><th scope="col">1인 1역</th><th scope="col">추가</th><th scope="col">총 상점</th></tr></thead>
           <tbody id="rankingBody"></tbody>
         </table>
@@ -78,6 +83,7 @@
   </main>
   <script src="data.js"></script>
   <script src="admin-data.js"></script>
+  <script src="point-settings.js"></script>
   <script src="admin.js"></script>
 </body>
 </html>

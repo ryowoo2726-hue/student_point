@@ -9,10 +9,6 @@
   let students = [];
   let currentStudent = null;
   let autoSyncTimer = null;
-  const ROLE_SHEET_GIDS = {
-    '\ud578\ub4dc\ud3f0 \ub2f4\ub2f9': '1616173869', '\ucd9c\uc11d\ubd80 \ub2f4\ub2f9': '1791574817',
-    '\ubd84\ub9ac\uc218\uac70': '408675367', '\ud14c\ube14\ub9bf \uad00\ub9ac': '2066046088', '\ud2b9\ubcc4\uc2e4 \uccad\uc18c': '1613811606'
-  };
 
   // --- Elements ---
   const searchSection = document.getElementById('searchSection');
@@ -42,6 +38,7 @@
   function init() {
     loadInitialData();
     bindEvents();
+    syncStatus.textContent = '조회 설정 확인 중';
 
     // 1) \ud398\uc774\uc9c0 \ub85c\ub4dc \uc989\uc2dc \uad6c\uae00 \uc2dc\ud2b8 \uba54\uc778 \ud0ed(\ucd1d \uc0c1\uc810) \ucd5c\uc2e0 \ub370\uc774\ud130 \uc790\ub3d9 \ub3d9\uae30\ud654
     syncMainSheetLive(false);
@@ -57,6 +54,13 @@
 
   // --- Search & Render ---
   async function handleSearch() {
+    try {
+      await PointSettings.load();
+    } catch (error) {
+      hideUnverifiedResult();
+      showToast('조회 시작일 설정을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
+      return;
+    }
     const query = studentInput.value.trim();
     if (!query) {
       showToast('\ud559\ubc88\uc744 \uc785\ub825\ud574\uc8fc\uc138\uc694.');
@@ -91,10 +95,18 @@
   }
 
   function showResult(student) {
+    if (!PointSettings.startDate) { hideUnverifiedResult(); return; }
     currentStudent = student;
+    const start = PointSettings.startDate;
+    const end = PointSettings.today();
+    const result = AdminPoints.calculate(student, start, end, GOOGLE_SHEET_CONFIG.academicYear);
+    document.getElementById('studentPeriod').textContent = start + ' ~ ' + end + ' (오늘) 기록';
+    const recordWarning = document.getElementById('studentRecordWarning');
+    recordWarning.hidden = result.issues.length === 0;
+    recordWarning.textContent = '일부 기록을 확인해야 합니다. 날짜가 확인된 기간 내 기록만 표시합니다.';
     studentNum.textContent = `${student.id} (${student.number}\ubc88)`;
     studentName.textContent = student.name;
-    studentPoints.textContent = student.points;
+    studentPoints.textContent = result.issues.length ? '확인 중' : result.total;
 
     renderRolePill(student);
 
@@ -115,34 +127,15 @@
   }
 
   function getPointRecords(student) {
-    if (Array.isArray(student.records)) {
-      return student.records.filter(item => Number(item.points) > 0);
-    }
-
-    const attendanceRecords = (student.monthly || [])
-      .filter(item => Number(item.points) > 0)
-      .map(item => ({
-        label: `${item.month} \ucd9c\uc11d`,
-        points: item.points,
-        detail: item.detail || ''
-      }));
-
-    if (Number(student.rolePoints) > 0) {
-      attendanceRecords.push({
-        label: '1\uc7781\uc5ed',
-        points: student.rolePoints,
-        detail: buildRoleDetail(student)
-      });
-    }
-
-    return attendanceRecords;
+    return AdminPoints.periodRecords(student, PointSettings.startDate, PointSettings.today(), GOOGLE_SHEET_CONFIG.academicYear);
   }
 
-  function buildRoleDetail(student) {
-    const dates = student.roleDates || [];
-    const roleName = student.role || '1\uc7781\uc5ed';
-    const dateText = dates.length ? dates.join(', ') : '\uc218\ud589 \ub0a0\uc9dc \ud655\uc778 \uc911';
-    return `${roleName}\n\uc218\ud589 ${dates.length}\ud68c\n\uc218\ud589 \ub0a0\uc9dc: ${dateText}\n\ubc18\uc601 \uc0c1\uc810: ${student.rolePoints || 0}\uc810`;
+  function hideUnverifiedResult() {
+    studentPoints.textContent = '—';
+    monthlyList.innerHTML = '';
+    resultSection.style.display = 'none';
+    searchSection.style.display = 'block';
+    syncStatus.textContent = '조회 설정 확인 필요';
   }
 
   function renderPointRecords(records) {
@@ -212,6 +205,13 @@
   // \uba54\uc778 '\ucd1d \uc0c1\uc810' \ud0ed \ub3d9\uae30\ud654
   async function syncMainSheetLive(notify = false) {
     if (typeof GOOGLE_SHEET_CONFIG === 'undefined') return;
+    try {
+      await PointSettings.load();
+      if (currentStudent) showResult(currentStudent);
+    } catch (error) {
+      hideUnverifiedResult();
+      return;
+    }
 
     const cacheBuster = `&_t=${Date.now()}`;
     const mainUrl = `${GOOGLE_SHEET_CONFIG.baseUrl}&gid=${GOOGLE_SHEET_CONFIG.mainGid}${cacheBuster}`;
@@ -244,7 +244,7 @@
       if (currentStudent) {
         const fresh = students.find(s => s.id === currentStudent.id);
         if (fresh) {
-          studentPoints.textContent = fresh.points;
+          showResult(fresh);
         }
       }
 
@@ -259,100 +259,36 @@
   // \uac1c\ubcc4 \ud559\uc0dd \uc2dc\ud2b8 \ud0ed \ub3d9\uae30\ud654
   async function fetchStudentLiveSheet(student, notify = false) {
     if (!student.gid || typeof GOOGLE_SHEET_CONFIG === 'undefined') return;
-
-    const cacheBuster = `&_t=${Date.now()}`;
-    const url = `${GOOGLE_SHEET_CONFIG.baseUrl}&gid=${student.gid}${cacheBuster}`;
-
     try {
-      const resp = await fetch(url, { cache: 'no-store' });
-      if (!resp.ok) return;
-
-      const csvText = await resp.text();
-      const rows = parseStandardCsv(csvText);
-
-      let livePoints = student.points;
-      const liveMonthly = [];
-      const liveRecords = [];
-      let liveRole = student.role;
-      let liveRolePoints = student.rolePoints || 0;
-
-      rows.forEach(row => {
-        if (row.length < 2) return;
-        const first = row[0].trim();
-        const second = (row[1] || '').trim();
-        const third = (row[2] || '').trim();
-
-        if (first.includes('\ucd1d \uc0c1\uc810') || second.includes('\ucd1d \uc0c1\uc810') || row.some(c => c.includes('\ucd1d \uc0c1\uc810'))) {
-          row.forEach(c => {
-            const m = c.match(/(\d+)\uc810/);
-            if (m) livePoints = parseInt(m[1], 10);
-          });
-        } else if (first.includes('\uc6d4 \ucd9c\uc11d')) {
-          const pts = parseInt(second.replace(/[^0-9]/g, '') || '0', 10);
-          const record = { label: first, points: pts, detail: third };
-          liveMonthly.push({ month: first.split(' ')[0], points: pts, detail: third });
-          if (pts > 0) liveRecords.push(record);
-        } else if (first.includes('1\uc7781\uc5ed')) {
-          const pts = parseInt(second.replace(/[^0-9]/g, '') || '0', 10);
-          if (third) liveRole = third;
-          liveRolePoints = pts;
-          if (pts > 0) {
-            liveRecords.push({ label: '1\uc7781\uc5ed', points: pts, detail: third });
-          }
-        }
-      });
-
-      student.points = livePoints;
-      student.monthly = liveMonthly;
-      student.records = liveRecords;
-      student.role = liveRole;
-      student.rolePoints = liveRolePoints;
+      const response = await fetch(GOOGLE_SHEET_CONFIG.baseUrl + '&gid=' + student.gid + '&_t=' + Date.now(), { cache: 'no-store' });
+      if (!response.ok) throw new Error('학생 기록 응답 오류');
+      const text = await response.text();
+      if (/^\s*</.test(text)) throw new Error('학생 기록 형식 오류');
+      Object.assign(student, AdminPoints.parseStudentSheet(student, AdminPoints.parseCsv(text), GOOGLE_SHEET_CONFIG.academicYear), { roleLoaded: false });
       await fetchRoleDetail(student);
-      if (liveRolePoints > 0) {
-        const roleRecord = liveRecords.find(record => record.label === '1\uc7781\uc5ed');
-        if (roleRecord) roleRecord.detail = buildRoleDetail(student);
-      }
-
-      const idx = students.findIndex(s => s.id === student.id);
-      if (idx !== -1) students[idx] = student;
-
-      if (currentStudent && currentStudent.id === student.id) {
-        studentPoints.textContent = student.points;
-        renderPointRecords(getPointRecords(student));
-        renderRolePill(student);
-      }
-
-      const now = new Date();
-      const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
-      syncStatus.textContent = `\ub3d9\uae30\ud654\ub428 ${timeStr}`;
-
-      if (notify) {
-        showToast(`${student.name} \ud559\uc0dd\uc758 \ucd5c\uc2e0 \uc0c1\uc810\uc774 \ubc18\uc601\ub418\uc5c8\uc2b5\ub2c8\ub2e4.`);
-      }
-    } catch (e) {
-      console.warn('Live fetch for student sheet failed:', e);
+      const index = students.findIndex(item => item.id === student.id);
+      if (index !== -1) students[index] = student;
+      if (currentStudent && currentStudent.id === student.id) showResult(student);
+      syncStatus.textContent = '동기화됨 ' + new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).format(new Date());
+      if (notify) showToast(student.name + ' 학생의 기간 상점을 반영했습니다.');
+    } catch (error) {
+      console.warn('Live fetch for student sheet failed:', error);
+      if (currentStudent && currentStudent.id === student.id) showResult(student);
+      syncStatus.textContent = '저장된 기록 표시';
     }
   }
 
   async function fetchRoleDetail(student) {
-    const roleName = Object.keys(ROLE_SHEET_GIDS).find(name => (student.role || '').startsWith(name));
-    if (!roleName || typeof GOOGLE_SHEET_CONFIG === 'undefined') return;
+    const rule = Object.entries(AdminPoints.ROLE_RULES).find(([name]) => (student.role || '').startsWith(name));
+    if (!rule) return;
     try {
-      const url = `${GOOGLE_SHEET_CONFIG.baseUrl}&gid=${ROLE_SHEET_GIDS[roleName]}&_t=${Date.now()}`;
-      const rows = parseStandardCsv(await (await fetch(url, { cache: 'no-store' })).text());
-      const header = rows[0] || [];
-      const col = header.findIndex(cell => cell.trim() === student.name);
-      if (col < 1) return;
-      student.roleDates = rows.slice(1)
-        .filter(row => String(row[col] || '').trim().toUpperCase() === 'TRUE')
-        .map(row => String(row[0] || '').trim())
-        .filter(Boolean);
-    } catch (err) {
-      console.warn('Role detail fetch error:', err);
-    }
+      const response = await fetch(GOOGLE_SHEET_CONFIG.baseUrl + '&gid=' + rule[1].gid + '&_t=' + Date.now(), { cache: 'no-store' });
+      if (!response.ok) throw new Error('역할 기록 응답 오류');
+      Object.assign(student, AdminPoints.attachRoleDates(student, AdminPoints.parseCsv(await response.text()), GOOGLE_SHEET_CONFIG.academicYear));
+    } catch (error) { console.warn('Role detail fetch error:', error); }
   }
 
-  // \ud45c\uc900 CSV \ud30c\uc11c
+  // 표준 CSV 파서
   function parseStandardCsv(text) {
     const lines = text.split(/\r?\n/).filter(l => l.trim() !== '');
     const result = [];
@@ -412,12 +348,12 @@
     syncStatus.textContent = '\ub3d9\uae30\ud654 \uc911';
 
     await syncMainSheetLive(false);
-    if (currentStudent) {
+    if (currentStudent && PointSettings.startDate) {
       await fetchStudentLiveSheet(currentStudent, false);
     }
 
     refreshBtn.classList.remove('spinning');
-    showToast('\uad6c\uae00 \uc2dc\ud2b8 \ucd5c\uc2e0 \ub370\uc774\ud130\ub85c \uc0c8\ub85c\uace0\uce68\ub418\uc5c8\uc2b5\ub2c8\ub2e4.');
+    showToast(PointSettings.startDate ? '조회 기간과 상점 기록을 새로고침했습니다.' : '조회 시작일 설정을 불러오지 못했습니다. 다시 시도해주세요.');
   }
 
   // Utilities

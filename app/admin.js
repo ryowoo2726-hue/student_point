@@ -15,9 +15,12 @@
   const syncStatus = document.getElementById('adminSyncStatus');
   const rankingBody = document.getElementById('rankingBody');
   const warning = document.getElementById('rankingWarning');
+  const sharedStatus = document.getElementById('sharedSettingsStatus');
+  let initialPeriod = false;
+  document.getElementById('sharedSettingsLink').href = PointSettings.sheetUrl;
 
   function today() {
-    return new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+    return PointSettings.today();
   }
 
   function escapeHtml(value) {
@@ -26,16 +29,18 @@
 
   function render() {
     if (!authenticated) return;
-    const cutoff = dateInput.value;
-    if (!cutoff || !dateInput.checkValidity()) return;
-    const ranked = api.rankStudents(students, cutoff, year);
+    const start = dateInput.value;
+    const end = today();
+    dateInput.max = end;
+    if (!start || !dateInput.checkValidity()) return;
+    const ranked = api.rankStudents(students, start, end, year);
     const verified = ranked.filter(student => !student.issues.length);
     const total = verified.reduce((sum, student) => sum + student.total, 0);
     const incomplete = ranked.length - verified.length;
     document.getElementById('classPoints').textContent = verified.length ? total : '—';
     document.getElementById('studentCount').textContent = ranked.length;
     document.getElementById('averagePoints').textContent = verified.length ? (total / verified.length).toFixed(1) : '—';
-    document.getElementById('rankingDate').textContent = `${cutoff.replace(/-/g, '. ')} 기준`;
+    document.getElementById('rankingDate').textContent = `${start.replace(/-/g, '. ')} ~ ${end.replace(/-/g, '. ')}`;
     warning.hidden = incomplete === 0;
     warning.textContent = `${incomplete}명의 기록을 확인해야 합니다. 해당 학생은 순위·학급 총 상점·평균에서 제외됩니다. 날짜가 확인된 점수는 아래에 표시됩니다.`;
     rankingBody.innerHTML = ranked.map(student => `
@@ -67,6 +72,13 @@
     document.querySelector('.admin-ranking').setAttribute('aria-busy', 'true');
     syncStatus.textContent = '구글 시트 기록을 불러오는 중입니다.';
     try {
+      try {
+        const sharedStart = await PointSettings.load();
+        sharedStatus.textContent = `학생 조회 기간: ${sharedStart} ~ ${today()} (오늘)`;
+        if (!initialPeriod) { dateInput.value = sharedStart; initialPeriod = true; }
+      } catch (error) {
+        sharedStatus.textContent = '학생 시작일 설정을 불러오지 못했습니다. 설정 시트와 연결 상태를 확인해주세요.';
+      }
       // 역할 시트는 한 번씩만 읽고 학생별 시트는 최대 5개씩 불러옵니다.
       const roleEntries = Object.entries(api.ROLE_RULES);
       const roleResults = await Promise.allSettled(roleEntries.map(([, rule]) => fetchRows(rule.gid)));

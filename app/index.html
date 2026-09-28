@@ -72,7 +72,7 @@
           </div>
 
           <div class="result-score-box">
-            <span class="score-label">총 상점</span>
+            <span class="score-label">기간 상점</span>
             <div class="score-value-row">
               <span class="score-num" id="studentPoints">9</span>
               <span class="score-unit">점</span>
@@ -84,6 +84,8 @@
         <div class="student-meta-pills" id="studentMetaPills">
           <span class="meta-pill" id="rolePill">1인1역: 분리수거</span>
         </div>
+        <p id="studentPeriod" class="admin-help"></p>
+        <p id="studentRecordWarning" class="admin-warning" role="status" hidden></p>
 
         <!-- Divider -->
         <div class="card-inner-divider"></div>
@@ -129,6 +131,8 @@
 
   <!-- Scripts -->
   <script src="data.js"></script>
+  <script src="admin-data.js"></script>
+  <script src="point-settings.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

@@ -71,7 +71,7 @@
         inHistory = true;
         result.historyPointsCol = row.indexOf('상점');
       } else if (inHistory && dateKey(first, year)) {
-        result.history.push({ date: first, points: pointsNumber(row[result.historyPointsCol]) });
+        result.history.push({ date: first, points: pointsNumber(row[result.historyPointsCol]), detail: second });
       }
     }
     if (!foundAttendance) throw new Error('학생별 출석 기록 형식을 확인할 수 없습니다.');
@@ -87,18 +87,20 @@
     return { ...student, roleDates: [...new Set(dates)], roleLoaded: true };
   }
 
-  function calculate(student, cutoff, year) {
+  function calculate(student, start, end, year) {
+    if (!dateKey(start, year) || !dateKey(end, year) || start > end) throw new RangeError('조회 기간을 확인해주세요.');
     let attendance = 0, role = 0, extra = 0;
     const issues = [];
     for (const month of student.monthly || []) {
       const dates = datesFromDetail(month.detail, year);
       if (dates.length !== Number(month.points)) issues.push('출석일 확인 필요');
-      attendance += dates.filter(date => date <= cutoff).length;
+      attendance += dates.filter(date => date >= start && date <= end).length;
     }
     const rule = Object.entries(ROLE_RULES).find(([name]) => (student.role || '').startsWith(name));
     if (rule && student.roleLoaded) {
-      const count = student.roleDates.filter(date => date <= cutoff).length;
-      role = Math.floor(count / rule[1].every) * rule[1].points;
+      const count = student.roleDates.filter(date => date <= end).length;
+      const before = student.roleDates.filter(date => date < start).length;
+      role = (Math.floor(count / rule[1].every) - Math.floor(before / rule[1].every)) * rule[1].points;
       const recordedRole = Math.floor(student.roleDates.length / rule[1].every) * rule[1].points;
       if (recordedRole !== Number(student.rolePoints || 0)) issues.push('역할 상점 확인 필요');
     } else if (Number(student.rolePoints) > 0 || rule) issues.push('역할 수행일 확인 필요');
@@ -108,7 +110,7 @@
     for (const record of history) {
       const date = dateKey(record.date, year);
       if (!date) issues.push('추가 상점 날짜 확인 필요');
-      else if (date <= cutoff) extra += Number(record.points || 0);
+      else if (date >= start && date <= end) extra += Number(record.points || 0);
     }
     const recordedTotal = (student.monthly || []).reduce((sum, item) => sum + Number(item.points || 0), 0)
       + Number(student.rolePoints || 0) + Number(student.extraPoints || 0);
@@ -117,8 +119,8 @@
       total: attendance + role + extra, issues: [...new Set(issues)] };
   }
 
-  function rankStudents(students, cutoff, year) {
-    const entries = students.map(student => calculate(student, cutoff, year));
+  function rankStudents(students, start, end, year) {
+    const entries = students.map(student => calculate(student, start, end, year));
     entries.sort((a, b) => Boolean(a.issues.length) - Boolean(b.issues.length) || b.total - a.total || a.number - b.number);
     let previous = null, rank = 0, position = 0;
     return entries.map(entry => {
@@ -130,7 +132,27 @@
     });
   }
 
-  const api = { ROLE_RULES, parseCsv, dateKey, datesFromDetail, pointsNumber, parseStudentSheet, attachRoleDates, calculate, rankStudents };
+  function periodRecords(student, start, end, year) {
+    const result = calculate(student, start, end, year);
+    const records = (student.monthly || []).map(month => {
+      const dates = datesFromDetail(month.detail, year).filter(date => date >= start && date <= end);
+      return { label: `${month.month} 출석`, points: dates.length, detail: dates.join(', ') };
+    }).filter(record => record.points > 0);
+    if (result.roleScore > 0) {
+      const dates = (student.roleDates || []).filter(date => date >= start && date <= end);
+      records.push({ label: '1인1역', points: result.roleScore,
+        detail: `${student.role}\n기간 내 수행 ${dates.length}회\n수행 날짜: ${dates.join(', ')}\n기간 내 받은 상점: ${result.roleScore}점` });
+    }
+    for (const record of student.history || []) {
+      const date = dateKey(record.date, year);
+      if (date && date >= start && date <= end && Number(record.points) > 0) {
+        records.push({ label: `${date} 추가 상점`, points: Number(record.points), detail: record.detail || '' });
+      }
+    }
+    return records;
+  }
+
+  const api = { ROLE_RULES, parseCsv, dateKey, datesFromDetail, pointsNumber, parseStudentSheet, attachRoleDates, calculate, rankStudents, periodRecords };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.AdminPoints = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

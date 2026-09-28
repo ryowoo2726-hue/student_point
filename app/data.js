@@ -5,6 +5,7 @@
 
 const GOOGLE_SHEET_CONFIG = {
   academicYear: 2026, // 연도 없는 출석일의 학년도 (1·2월은 다음 해)
+  settingsGid: '20260928', // 조회 설정 탭: B2에 학생 공통 시작일 저장
   sheetId: "1bxkPwqTH9HWoyVkolJSid7gWk_hX4IligbS61QWoje0",
   mainGid: "1555944749", // 총 상점 시트
   baseUrl: "https://docs.google.com/spreadsheets/d/1bxkPwqTH9HWoyVkolJSid7gWk_hX4IligbS61QWoje0/gviz/tq?tqx=out:csv"

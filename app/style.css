@@ -623,6 +623,10 @@ body.modal-open {
 .admin-primary-btn { padding: 11px 18px; border: none; border-radius: var(--radius-sm); background: var(--accent); color: var(--accent-text); font: inherit; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
 .admin-primary-btn:hover { opacity: 0.88; }
 .admin-help { margin-top: 10px; color: var(--text-sub); font-size: 0.76rem; line-height: 1.65; word-break: keep-all; }
+.admin-shared-settings { margin-top: 16px; padding-top: 6px; border-top: 1px solid var(--item-border); }
+.admin-shared-settings .page-link { margin-top: 8px; }
+.admin-ranking .monthly-section-head { gap: 10px; flex-wrap: wrap; }
+.month-detail-panel { white-space: pre-line; }
 .admin-summary { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 16px; }
 .admin-summary .score-value-row { margin-top: 8px; }
 .admin-summary .score-num { font-size: 1.9rem; font-variant-numeric: tabular-nums; }
