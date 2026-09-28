@@ -1,5 +1,5 @@
 /**
- * 마석중학교 2학년 2반 상점 간편 조회 시스템 (Design 1 클린 매트 단일 테마)
+ * \ub9c8\uc11d\uc911\ud559\uad50 2\ud559\ub144 2\ubc18 \uc0c1\uc810 \uac04\ud3b8 \uc870\ud68c \uc2dc\uc2a4\ud15c (Design 1 \ud074\ub9b0 \ub9e4\ud2b8 \ub2e8\uc77c \ud14c\ub9c8)
  */
 
 (function () {
@@ -10,8 +10,8 @@
   let currentStudent = null;
   let autoSyncTimer = null;
   const ROLE_SHEET_GIDS = {
-    '핸드폰 담당': '1616173869', '출석부 담당': '1791574817',
-    '분리수거': '408675367', '테블릿 관리': '2066046088', '특별실 청소': '1613811606'
+    '\ud578\ub4dc\ud3f0 \ub2f4\ub2f9': '1616173869', '\ucd9c\uc11d\ubd80 \ub2f4\ub2f9': '1791574817',
+    '\ubd84\ub9ac\uc218\uac70': '408675367', '\ud14c\ube14\ub9bf \uad00\ub9ac': '2066046088', '\ud2b9\ubcc4\uc2e4 \uccad\uc18c': '1613811606'
   };
 
   // --- Elements ---
@@ -43,10 +43,10 @@
     loadInitialData();
     bindEvents();
 
-    // 1) 페이지 로드 즉시 구글 시트 메인 탭(총 상점) 최신 데이터 자동 동기화
+    // 1) \ud398\uc774\uc9c0 \ub85c\ub4dc \uc989\uc2dc \uad6c\uae00 \uc2dc\ud2b8 \uba54\uc778 \ud0ed(\ucd1d \uc0c1\uc810) \ucd5c\uc2e0 \ub370\uc774\ud130 \uc790\ub3d9 \ub3d9\uae30\ud654
     syncMainSheetLive(false);
 
-    // 2) 30초마다 백그라운드 자동 동기화
+    // 2) 30\ucd08\ub9c8\ub2e4 \ubc31\uadf8\ub77c\uc6b4\ub4dc \uc790\ub3d9 \ub3d9\uae30\ud654
     setupAutoSync();
   }
 
@@ -59,7 +59,7 @@
   async function handleSearch() {
     const query = studentInput.value.trim();
     if (!query) {
-      showToast('학번을 입력해주세요.');
+      showToast('\ud559\ubc88\uc744 \uc785\ub825\ud574\uc8fc\uc138\uc694.');
       studentInput.focus();
       return;
     }
@@ -79,26 +79,26 @@
     }
 
     if (!matched) {
-      showToast(`'${query}' 학생을 찾을 수 없습니다.`);
+      showToast(`'${query}' \ud559\uc0dd\uc744 \ucc3e\uc744 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4.`);
       return;
     }
 
-    // 1단계: 캐시된 데이터로 즉시 화면 렌더링
+    // 1\ub2e8\uacc4: \uce90\uc2dc\ub41c \ub370\uc774\ud130\ub85c \uc989\uc2dc \ud654\uba74 \ub80c\ub354\ub9c1
     showResult(matched);
 
-    // 2단계: 구글 시트 해당 학생 탭에서 실시간 최신 데이터 즉시 갱신
+    // 2\ub2e8\uacc4: \uad6c\uae00 \uc2dc\ud2b8 \ud574\ub2f9 \ud559\uc0dd \ud0ed\uc5d0\uc11c \uc2e4\uc2dc\uac04 \ucd5c\uc2e0 \ub370\uc774\ud130 \uc989\uc2dc \uac31\uc2e0
     await fetchStudentLiveSheet(matched, false);
   }
 
   function showResult(student) {
     currentStudent = student;
-    studentNum.textContent = `${student.id} (${student.number}번)`;
+    studentNum.textContent = `${student.id} (${student.number}\ubc88)`;
     studentName.textContent = student.name;
     studentPoints.textContent = student.points;
 
     renderRolePill(student);
 
-    // 출석과 1인1역을 포함한 받은 상점 기록을 모두 표시
+    // \ucd9c\uc11d\uacfc 1\uc7781\uc5ed\uc744 \ud3ec\ud568\ud55c \ubc1b\uc740 \uc0c1\uc810 \uae30\ub85d\uc744 \ubaa8\ub450 \ud45c\uc2dc
     renderPointRecords(getPointRecords(student));
 
     searchSection.style.display = 'none';
@@ -106,8 +106,8 @@
   }
 
   function renderRolePill(student) {
-    if (student.role && student.role !== '없음' && student.role !== '역할 없음') {
-      rolePill.textContent = `1인1역: ${student.role}`;
+    if (student.role && student.role !== '\uc5c6\uc74c' && student.role !== '\uc5ed\ud560 \uc5c6\uc74c') {
+      rolePill.textContent = `1\uc7781\uc5ed: ${student.role}`;
       rolePill.style.display = 'inline-block';
     } else {
       rolePill.style.display = 'none';
@@ -122,14 +122,14 @@
     const attendanceRecords = (student.monthly || [])
       .filter(item => Number(item.points) > 0)
       .map(item => ({
-        label: `${item.month} 출석`,
+        label: `${item.month} \ucd9c\uc11d`,
         points: item.points,
         detail: item.detail || ''
       }));
 
     if (Number(student.rolePoints) > 0) {
       attendanceRecords.push({
-        label: '1인1역',
+        label: '1\uc7781\uc5ed',
         points: student.rolePoints,
         detail: buildRoleDetail(student)
       });
@@ -140,22 +140,22 @@
 
   function buildRoleDetail(student) {
     const dates = student.roleDates || [];
-    const roleName = student.role || '1인1역';
-    const dateText = dates.length ? dates.join(', ') : '수행 날짜 확인 중';
-    return `${roleName}\n수행 ${dates.length}회\n수행 날짜: ${dateText}\n반영 상점: ${student.rolePoints || 0}점`;
+    const roleName = student.role || '1\uc7781\uc5ed';
+    const dateText = dates.length ? dates.join(', ') : '\uc218\ud589 \ub0a0\uc9dc \ud655\uc778 \uc911';
+    return `${roleName}\n\uc218\ud589 ${dates.length}\ud68c\n\uc218\ud589 \ub0a0\uc9dc: ${dateText}\n\ubc18\uc601 \uc0c1\uc810: ${student.rolePoints || 0}\uc810`;
   }
 
   function renderPointRecords(records) {
     monthlyList.innerHTML = '';
 
     if (!records || records.length === 0) {
-      monthlyList.innerHTML = '<div style="font-size:0.8rem; color:var(--text-muted); text-align:center; padding:12px;">받은 상점 기록이 없습니다.</div>';
+      monthlyList.innerHTML = '<div style="font-size:0.8rem; color:var(--text-muted); text-align:center; padding:12px;">\ubc1b\uc740 \uc0c1\uc810 \uae30\ub85d\uc774 \uc5c6\uc2b5\ub2c8\ub2e4.</div>';
       return;
     }
 
     records.forEach(item => {
       const row = document.createElement('div');
-      const isRoleRecord = /^1인\s*1역/.test(item.label);
+      const isRoleRecord = /^1\uc778\s*1\uc5ed/.test(item.label);
       row.className = `monthly-row${isRoleRecord ? ' role-point-row' : ''}`;
 
       const hasDetail = item.detail && item.detail.trim() !== '';
@@ -164,11 +164,11 @@
         <div class="monthly-main">
           <div class="month-name-wrap">
             <span class="month-name">${escapeHtml(item.label)}</span>
-            ${isRoleRecord ? '<span class="role-record-tag">1인 1역</span>' : ''}
-            ${hasDetail ? '<span class="month-toggle-icon">▼</span>' : ''}
+            ${isRoleRecord ? '<span class="role-record-tag">1\uc778 1\uc5ed</span>' : ''}
+            ${hasDetail ? '<span class="month-toggle-icon">\u25bc</span>' : ''}
           </div>
           <span class="month-pts">
-            +${item.points}점
+            +${item.points}\uc810
           </span>
         </div>
         ${hasDetail ? `<div class="month-detail-panel">${escapeHtml(item.detail)}</div>` : ''}
@@ -178,7 +178,7 @@
         row.querySelector('.monthly-main').addEventListener('click', () => {
           row.classList.toggle('open');
         });
-        if (item.label === '9월 출석') {
+        if (item.label === '9\uc6d4 \ucd9c\uc11d') {
           row.classList.add('open');
         }
       }
@@ -209,7 +209,7 @@
 
   // --- Live Google Sheet Sync ---
 
-  // 메인 '총 상점' 탭 동기화
+  // \uba54\uc778 '\ucd1d \uc0c1\uc810' \ud0ed \ub3d9\uae30\ud654
   async function syncMainSheetLive(notify = false) {
     if (typeof GOOGLE_SHEET_CONFIG === 'undefined') return;
 
@@ -239,7 +239,7 @@
 
       const now = new Date();
       const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
-      syncStatus.textContent = `동기화됨 ${timeStr}`;
+      syncStatus.textContent = `\ub3d9\uae30\ud654\ub428 ${timeStr}`;
 
       if (currentStudent) {
         const fresh = students.find(s => s.id === currentStudent.id);
@@ -249,14 +249,14 @@
       }
 
       if (notify) {
-        showToast(`구글 시트 최신 데이터 반영 완료 (${timeStr})`);
+        showToast(`\uad6c\uae00 \uc2dc\ud2b8 \ucd5c\uc2e0 \ub370\uc774\ud130 \ubc18\uc601 \uc644\ub8cc (${timeStr})`);
       }
     } catch (err) {
       console.warn('Main sheet live fetch error:', err);
     }
   }
 
-  // 개별 학생 시트 탭 동기화
+  // \uac1c\ubcc4 \ud559\uc0dd \uc2dc\ud2b8 \ud0ed \ub3d9\uae30\ud654
   async function fetchStudentLiveSheet(student, notify = false) {
     if (!student.gid || typeof GOOGLE_SHEET_CONFIG === 'undefined') return;
 
@@ -282,22 +282,22 @@
         const second = (row[1] || '').trim();
         const third = (row[2] || '').trim();
 
-        if (first.includes('총 상점') || second.includes('총 상점') || row.some(c => c.includes('총 상점'))) {
+        if (first.includes('\ucd1d \uc0c1\uc810') || second.includes('\ucd1d \uc0c1\uc810') || row.some(c => c.includes('\ucd1d \uc0c1\uc810'))) {
           row.forEach(c => {
-            const m = c.match(/(\d+)점/);
+            const m = c.match(/(\d+)\uc810/);
             if (m) livePoints = parseInt(m[1], 10);
           });
-        } else if (first.includes('월 출석')) {
+        } else if (first.includes('\uc6d4 \ucd9c\uc11d')) {
           const pts = parseInt(second.replace(/[^0-9]/g, '') || '0', 10);
           const record = { label: first, points: pts, detail: third };
           liveMonthly.push({ month: first.split(' ')[0], points: pts, detail: third });
           if (pts > 0) liveRecords.push(record);
-        } else if (first.includes('1인1역')) {
+        } else if (first.includes('1\uc7781\uc5ed')) {
           const pts = parseInt(second.replace(/[^0-9]/g, '') || '0', 10);
           if (third) liveRole = third;
           liveRolePoints = pts;
           if (pts > 0) {
-            liveRecords.push({ label: '1인1역', points: pts, detail: third });
+            liveRecords.push({ label: '1\uc7781\uc5ed', points: pts, detail: third });
           }
         }
       });
@@ -309,7 +309,7 @@
       student.rolePoints = liveRolePoints;
       await fetchRoleDetail(student);
       if (liveRolePoints > 0) {
-        const roleRecord = liveRecords.find(record => record.label === '1인1역');
+        const roleRecord = liveRecords.find(record => record.label === '1\uc7781\uc5ed');
         if (roleRecord) roleRecord.detail = buildRoleDetail(student);
       }
 
@@ -324,10 +324,10 @@
 
       const now = new Date();
       const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
-      syncStatus.textContent = `동기화됨 ${timeStr}`;
+      syncStatus.textContent = `\ub3d9\uae30\ud654\ub428 ${timeStr}`;
 
       if (notify) {
-        showToast(`${student.name} 학생의 최신 상점이 반영되었습니다.`);
+        showToast(`${student.name} \ud559\uc0dd\uc758 \ucd5c\uc2e0 \uc0c1\uc810\uc774 \ubc18\uc601\ub418\uc5c8\uc2b5\ub2c8\ub2e4.`);
       }
     } catch (e) {
       console.warn('Live fetch for student sheet failed:', e);
@@ -352,7 +352,7 @@
     }
   }
 
-  // 표준 CSV 파서
+  // \ud45c\uc900 CSV \ud30c\uc11c
   function parseStandardCsv(text) {
     const lines = text.split(/\r?\n/).filter(l => l.trim() !== '');
     const result = [];
@@ -379,7 +379,7 @@
     return result;
   }
 
-  // 자동 동기화 설정
+  // \uc790\ub3d9 \ub3d9\uae30\ud654 \uc124\uc815
   function setupAutoSync() {
     if (autoSyncTimer) clearInterval(autoSyncTimer);
     autoSyncTimer = setInterval(() => {
@@ -406,10 +406,10 @@
     });
   }
 
-  // 새로고침 버튼
+  // \uc0c8\ub85c\uace0\uce68 \ubc84\ud2bc
   async function refreshAll() {
     refreshBtn.classList.add('spinning');
-    syncStatus.textContent = '동기화 중';
+    syncStatus.textContent = '\ub3d9\uae30\ud654 \uc911';
 
     await syncMainSheetLive(false);
     if (currentStudent) {
@@ -417,7 +417,7 @@
     }
 
     refreshBtn.classList.remove('spinning');
-    showToast('구글 시트 최신 데이터로 새로고침되었습니다.');
+    showToast('\uad6c\uae00 \uc2dc\ud2b8 \ucd5c\uc2e0 \ub370\uc774\ud130\ub85c \uc0c8\ub85c\uace0\uce68\ub418\uc5c8\uc2b5\ub2c8\ub2e4.');
   }
 
   // Utilities
