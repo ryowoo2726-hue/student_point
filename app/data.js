@@ -578,7 +578,7 @@ const DEFAULT_STUDENTS = [
         "detail": ""
       }
     ],
-    "role": "역할 없음",
+    "role": "학생 관리",
     "extraPoints": 0,
     "history": [],
     "rolePoints": 0
@@ -882,7 +882,7 @@ const DEFAULT_STUDENTS = [
         "detail": ""
       }
     ],
-    "role": "역할 없음",
+    "role": "칠판정리",
     "extraPoints": 0,
     "history": [],
     "rolePoints": 0

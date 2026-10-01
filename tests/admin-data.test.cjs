@@ -8,6 +8,23 @@ function student(overrides = {}) {
     role: '역할 없음', rolePoints: 0, extraPoints: 0, history: [], ...overrides };
 }
 
+for (const [name, role] of [['조은찬', '칠판정리'], ['이동하', '학생 관리']]) {
+  test(`${name}의 ${role}는 누적 5일마다 3점이며 조회 기간 이전 수행일도 누적한다`, () => {
+    const dates = Array.from({ length: 10 }, (_, i) => `2026-10-${String(i + 1).padStart(2, '0')}`);
+    const entry = api.attachRoleDates(student({ name, role, rolePoints: 6, points: 8 }),
+      [['날짜', name], ...dates.map(date => [date, 'TRUE']), [dates[0], 'TRUE'], ['2026-10-11', 'FALSE']], 2026);
+    assert.equal(entry.roleDates.length, 10);
+    for (const [end, expected] of [['04', 0], ['05', 3], ['09', 3], ['10', 6]]) {
+      const result = api.calculate(entry, '2026-10-01', `2026-10-${end}`, 2026);
+      assert.equal(result.roleScore, expected);
+      assert.deepEqual(result.issues, []);
+    }
+    assert.equal(api.calculate(entry, '2026-10-05', '2026-10-05', 2026).roleScore, 3);
+    assert.equal(api.calculate(entry, '2026-10-06', '2026-10-09', 2026).roleScore, 0);
+    assert.equal(api.calculate(entry, '2026-10-06', '2026-10-10', 2026).roleScore, 3);
+  });
+}
+
 test('CSV 안의 줄바꿈, 쉼표, 이중 따옴표를 보존한다', () => {
   assert.deepEqual(api.parseCsv('"구분","내용"\r\n"기록","첫 줄, 내용\n둘째 ""줄"""'),
     [['구분', '내용'], ['기록', '첫 줄, 내용\n둘째 "줄"']]);

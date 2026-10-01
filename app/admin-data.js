@@ -6,7 +6,9 @@
     '출석부 담당': { gid: '1791574817', every: 5, points: 1 },
     '분리수거': { gid: '408675367', every: 1, points: 3 },
     '테블릿 관리': { gid: '2066046088', every: 5, points: 3 },
-    '특별실 청소': { gid: '1613811606', every: 1, points: 1 }
+    '특별실 청소': { gid: '1613811606', every: 1, points: 1 },
+    '칠판정리': { gid: '20261001', every: 5, points: 3 },
+    '학생 관리': { gid: '20261002', every: 5, points: 3 }
   };
 
   function parseCsv(text) {
