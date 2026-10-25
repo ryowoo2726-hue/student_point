@@ -11,12 +11,33 @@
 - **학생 공통 기간 설정**: 구글 시트에서 시작일을 변경하면 학생별 점수와 상세 기록에도 공통 적용
 
 ## 🚀 실행 방법
-`app/index.html` 파일을 더블 클릭하여 웹 브라우저(Chrome, Edge 등)로 바로 열 수 있습니다.
-로컬 웹 서버 구동 시:
+Cloudflare Pages에서 호스팅하며, 구글 시트 링크는 서버 환경변수로만 설정합니다.
+브라우저는 같은 사이트의 `/api/sheet`를 통해 시트 CSV를 읽습니다.
+
+### Cloudflare Pages 배포
+
+1. GitHub 저장소를 Cloudflare **Workers & Pages → Pages**에 연결합니다.
+2. 프레임워크는 **None**, 빌드 명령은 `node build.mjs`, 출력 디렉터리는 `dist`로 설정합니다.
+3. 프로젝트의 **Settings → Variables and Secrets**에서 `GOOGLE_SHEET_URL`을 추가하고 기존 구글 시트의 전체 링크(`https://docs.google.com/spreadsheets/d/시트ID/edit`)를 값으로 입력합니다. 링크를 감추려면 Secret 유형을 선택합니다.
+4. Production에 설정하고, 미리보기 배포도 사용한다면 Preview에도 같은 변수를 설정한 뒤 배포합니다. 환경변수를 변경한 경우 재배포합니다.
+
+`functions/`는 저장소 루트에 두며 Pages가 API로 배포합니다. 공개 정적 파일은 `dist`에만 복사하므로 로컬 환경변수 파일은 배포되지 않습니다.
+기존 시트와 탭 구조를 그대로 사용하며, 구글 시트는 로그인 없이 읽을 수 있는 공유 상태여야 합니다.
+환경변수는 시트 링크의 관리 위치를 바꾸며, 학생 조회 API에 별도 인증을 추가하지는 않습니다.
+관리자의 **학생 시작일 설정** 버튼은 서버를 거쳐 시트 편집 화면으로 이동합니다.
+
+[Cloudflare Pages 환경변수 및 Secret 설정](https://developers.cloudflare.com/pages/functions/bindings/)
+
+### 로컬 실행
+
+`.dev.vars.example`을 `.dev.vars`로 복사해 실제 링크를 입력합니다. `.dev.vars`는 Git에서 제외됩니다.
+Node.js와 Wrangler를 사용해 실행합니다.
+
 ```bash
-python -m http.server 5173
+node build.mjs
+npx wrangler pages dev dist
 ```
-이후 `http://localhost:5173` 접속.
+터미널에 표시된 로컬 주소로 접속합니다. HTML 파일 직접 열기나 Python 정적 서버만으로는 서버 환경변수와 API를 사용할 수 없습니다.
 
 ## 📂 파일 구조
 - `app/index.html` : 메인 웹 인터페이스
@@ -27,6 +48,8 @@ python -m http.server 5173
 - `app/admin.js` : 관리자 화면 및 전체 학생 기록 동기화
 - `app/admin-data.js` : 날짜별 출석·역할·추가 상점 계산과 공동 순위
 - `app/point-settings.js` : 구글 시트에서 학생 공통 시작일 조회
+- `functions/api/[[path]].js` : 환경변수 기반 시트 조회 및 설정 시트 이동
+- `build.mjs` : 배포할 정적 파일만 `dist`로 복사
 
 ## 관리자 페이지
 
@@ -40,6 +63,7 @@ python -m http.server 5173
 동점은 공동 순위로 처리합니다(예: 1위, 1위, 3위).
 5회마다 상점을 받는 역할은 기간 안에 5회·10회 등의 기준을 채운 날 받은 점수를 계산합니다.
 시작일 이전에 받은 역할 상점은 제외하지만, 이전 수행 횟수는 지급 기준에 계속 반영됩니다.
+선정호 학생의 **급식 알리미**도 역할 탭(`gid=20261003`)의 체크된 수행일을 읽어 누적 5회마다 3점을 반영합니다.
 
 ### 학생 공통 조회 기간 변경
 
@@ -66,12 +90,13 @@ python -m http.server 5173
 Node.js가 설치되어 있으면 다음 명령으로 날짜 경계, 공동 순위, 역할 상점 기준을 검증합니다.
 
 ```bash
-node --test tests/admin-data.test.cjs
+node --test tests/*.test.cjs
 ```
 
 실제 구글 시트 30명의 상세 기록과 메인 총 상점을 비교하는 검증도 가능합니다(PowerShell).
 
 ```powershell
 $env:CHECK_LIVE_SHEETS='1'
+$env:GOOGLE_SHEET_URL='기존 구글 시트 전체 링크'
 node --test tests/admin-data.test.cjs
 ```

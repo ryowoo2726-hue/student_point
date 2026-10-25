@@ -27,5 +27,5 @@
     finally { pending = null; }
   }
   window.PointSettings = { today, load, get startDate() { return startDate; },
-    sheetUrl: `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_CONFIG.sheetId}/edit#gid=${GOOGLE_SHEET_CONFIG.settingsGid}&range=B2` };
+    sheetUrl: '/api/settings-sheet' };
 })();

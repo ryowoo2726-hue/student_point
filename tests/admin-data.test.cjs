@@ -8,7 +8,7 @@ function student(overrides = {}) {
     role: '역할 없음', rolePoints: 0, extraPoints: 0, history: [], ...overrides };
 }
 
-for (const [name, role] of [['조은찬', '칠판정리'], ['이동하', '학생 관리']]) {
+for (const [name, role] of [['조은찬', '칠판정리'], ['이동하', '학생 관리'], ['선정호', '급식 알리미']]) {
   test(`${name}의 ${role}는 누적 5일마다 3점이며 조회 기간 이전 수행일도 누적한다`, () => {
     const dates = Array.from({ length: 10 }, (_, i) => `2026-10-${String(i + 1).padStart(2, '0')}`);
     const entry = api.attachRoleDates(student({ name, role, rolePoints: 6, points: 8 }),
@@ -131,8 +131,10 @@ test('실제 구글 시트의 전체 기록 합계가 메인 총 상점과 일�
   const context = vm.createContext({});
   vm.runInContext(fs.readFileSync(require.resolve('../app/data.js'), 'utf8') + '\nthis.roster = DEFAULT_STUDENTS; this.config = GOOGLE_SHEET_CONFIG;', context);
   const { roster, config } = context;
+  const sheetUrl = new URL(process.env.GOOGLE_SHEET_URL);
+  const baseUrl = `${sheetUrl.origin}${sheetUrl.pathname.replace(/\/(?:edit|gviz\/tq).*$/, '')}/gviz/tq?tqx=out:csv`;
   async function fetchRows(gid) {
-    const response = await fetch(`${config.baseUrl}&gid=${gid}`, { signal: AbortSignal.timeout(15000) });
+    const response = await fetch(`${baseUrl}&gid=${gid}`, { signal: AbortSignal.timeout(15000) });
     assert.ok(response.ok);
     return api.parseCsv(await response.text());
   }

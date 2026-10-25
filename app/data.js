@@ -1,14 +1,13 @@
 /**
  * 마석중학교 2학년 2반 상점 데이터 및 개별 학생 시트 연동
- * 구글 스프레드시트: https://docs.google.com/spreadsheets/d/1bxkPwqTH9HWoyVkolJSid7gWk_hX4IligbS61QWoje0/edit
+ * 시트 링크는 Cloudflare의 GOOGLE_SHEET_URL 환경변수에서 관리합니다.
  */
 
 const GOOGLE_SHEET_CONFIG = {
   academicYear: 2026, // 연도 없는 출석일의 학년도 (1·2월은 다음 해)
   settingsGid: '20260928', // 조회 설정 탭: B2에 학생 공통 시작일 저장
-  sheetId: "1bxkPwqTH9HWoyVkolJSid7gWk_hX4IligbS61QWoje0",
   mainGid: "1555944749", // 총 상점 시트
-  baseUrl: "https://docs.google.com/spreadsheets/d/1bxkPwqTH9HWoyVkolJSid7gWk_hX4IligbS61QWoje0/gviz/tq?tqx=out:csv"
+  baseUrl: "/api/sheet?format=csv"
 };
 
 // 2학년 2반 30명 개별 시트 기반 데이터 캐시 (월별 상점 내역 포함)
@@ -540,7 +539,7 @@ const DEFAULT_STUDENTS = [
         "detail": ""
       }
     ],
-    "role": "역할 없음",
+    "role": "급식 알리미",
     "extraPoints": 0,
     "history": [],
     "rolePoints": 0

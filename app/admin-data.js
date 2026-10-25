@@ -8,7 +8,8 @@
     '테블릿 관리': { gid: '2066046088', every: 5, points: 3 },
     '특별실 청소': { gid: '1613811606', every: 1, points: 1 },
     '칠판정리': { gid: '20261001', every: 5, points: 3 },
-    '학생 관리': { gid: '20261002', every: 5, points: 3 }
+    '학생 관리': { gid: '20261002', every: 5, points: 3 },
+    '급식 알리미': { gid: '20261003', every: 5, points: 3 }
   };
 
   function parseCsv(text) {
