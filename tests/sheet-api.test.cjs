@@ -2,6 +2,22 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 
+test('Workers에서도 정적 화면과 시트 API를 각각 실행한다', async () => {
+  const { default: worker } = await import('../worker.mjs');
+  const env = { ASSETS: { fetch: async request => new Response(new URL(request.url).pathname) } };
+  const call = (path, method = 'GET') => worker.fetch(new Request(`https://example.com${path}`, { method }), env);
+  assert.equal(await (await call('/app/')).text(), '/app/');
+  assert.equal((await call('/api/sheet?gid=123')).status, 503);
+  assert.equal((await call('/api/missing')).status, 404);
+  const denied = await call('/api/sheet?gid=123', 'POST');
+  assert.equal(denied.status, 405);
+  assert.equal(denied.headers.get('allow'), 'GET');
+  const configured = await worker.fetch(new Request('https://example.com/api/settings-sheet'), {
+    ...env, GOOGLE_SHEET_URL: 'https://docs.google.com/spreadsheets/d/test-sheet/edit'
+  });
+  assert.equal(configured.status, 302);
+});
+
 test('시트 API는 환경변수만 사용하고 요청·응답 오류를 처리한다', async () => {
   const source = fs.readFileSync('functions/api/[[path]].js', 'utf8');
   const { onRequestGet } = await import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`);

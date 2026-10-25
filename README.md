@@ -11,8 +11,17 @@
 - **학생 공통 기간 설정**: 구글 시트에서 시작일을 변경하면 학생별 점수와 상세 기록에도 공통 적용
 
 ## 🚀 실행 방법
-Cloudflare Pages에서 호스팅하며, 구글 시트 링크는 서버 환경변수로만 설정합니다.
+Cloudflare Workers 또는 Pages에서 호스팅하며, 구글 시트 링크는 서버 환경변수로만 설정합니다.
 브라우저는 같은 사이트의 `/api/sheet`를 통해 시트 CSV를 읽습니다.
+
+### Cloudflare Workers 배포 (workers.dev 주소를 사용하는 경우)
+
+1. 연결된 GitHub 저장소는 그대로 두고 빌드 명령을 `node build.mjs`, 배포 명령을 `npx wrangler deploy`로 설정합니다.
+2. 저장소의 `wrangler.jsonc`가 `worker.mjs`와 `dist`를 함께 배포합니다. 정적 화면만 업로드하면 `/api/sheet`가 404로 실패합니다.
+3. Worker 프로젝트의 **Settings → Variables and Secrets**에 `GOOGLE_SHEET_URL`을 Secret으로 저장합니다. 값은 따옴표 없이 기존 시트 전체 링크를 입력합니다.
+4. 최신 커밋을 배포하고 기존 `workers.dev/app/` 주소에서 조회합니다. `/api/sheet?gid=20260928&range=A1:C3`에서 CSV가 반환되면 API가 연결된 상태입니다.
+
+로컬에서는 `node build.mjs` 실행 후 `npx wrangler dev`로 확인합니다.
 
 ### Cloudflare Pages 배포
 
@@ -49,6 +58,7 @@ npx wrangler pages dev dist
 - `app/admin-data.js` : 날짜별 출석·역할·추가 상점 계산과 공동 순위
 - `app/point-settings.js` : 구글 시트에서 학생 공통 시작일 조회
 - `functions/api/[[path]].js` : 환경변수 기반 시트 조회 및 설정 시트 이동
+- `worker.mjs`, `wrangler.jsonc` : Workers에서 같은 API와 정적 파일 실행
 - `build.mjs` : 배포할 정적 파일만 `dist`로 복사
 
 ## 관리자 페이지
